@@ -35,7 +35,7 @@ export default class ExtContentFetcher implements ISecurableObjectStore {
 
     let scopeFql: string = "";
     if (this.props.scope === SPScope.SiteCollection) {
-      scopeFql = " SiteId:" + this.props.context.pageContext.web.id.toString();
+      scopeFql = " SiteId:" + this.props.context.pageContext.site.id.toString();
     }
     else if (this.props.scope === SPScope.Site) {
       scopeFql = " WebId:" + this.props.context.pageContext.web.id.toString();
@@ -51,10 +51,10 @@ export default class ExtContentFetcher implements ISecurableObjectStore {
     // "MY" should represent things I have created or edited or shared.
     let modeFql: string = "";
     if (this.props.mode === Mode.AllExtSharedDocuments || this.props.mode === Mode.MyExtSharedDocuments) {
-      //modeFql = " IsDocument=1"; // TODO: Do something better than this
+      modeFql = ""; //" IsDocument=1"; // TODO: Do something better than this
     }
     else if (this.props.mode === Mode.AllExtSharedContainers || this.props.mode === Mode.MyExtSharedContainers) {
-      //modeFql = " IsDocument=0"; // TODO: Do something better than this
+      modeFql = " IsDocument=0"; // TODO: Do something better than this
     }
     else {
       this.log.logError("Unsupported mode: " + this.props.mode);

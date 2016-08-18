@@ -1,9 +1,9 @@
 import * as React from "react";
 
 import {
+  ControlMode,
   IExternalSharingDashboardProps,
   IGetExtContentFuncResponse,
-  ControlMode,
   ISecurableObject
 } from "../classes/Interfaces";
 
@@ -12,9 +12,9 @@ import {
 } from "../classes/Logger";
 
 import {
+  Label,
   Spinner,
-  SpinnerType,
-  Label
+  SpinnerType
 } from "office-ui-fabric-react";
 
 import Table from "./Table";
@@ -29,6 +29,7 @@ interface ITableRowProps {
 
 export default class ExternalSharingDashboard extends React.Component<IExternalSharingDashboardProps, IGetExtContentFuncResponse> {
   private log: Logger;
+  private updatedOnce: boolean = false;
 
   constructor() {
     super();
@@ -45,38 +46,13 @@ export default class ExternalSharingDashboard extends React.Component<IExternalS
     this._updateState();
   }
 
-  private updatedOnce: boolean = false;
-
   public componentDidUpdate(): void {
     this.log.logInfo("componentDidUpdate");
     if (this.state.timeStamp === this.props.store.timeStamp) {
       // Do nothing, as the data will be the same
     } else {
-      if (!this.updatedOnce) {
-        this.updatedOnce = true;
-        this._updateState();
-      }
+      this._updateState();
     }
-  }
-
-  private _updateState(): void {
-    this.log.logInfo("_updateState");
-    this._setStateToLoading();
-    this.props.store.getAllExtDocuments()
-    .then((r) => {
-      this.setState(r);
-      this.log.logInfo("_setStateToContent");
-    });
-  }
-
-  private _setStateToLoading(): void {
-    this.log.logInfo("_setStateToLoading");
-    this.setState({
-      extContent: [],
-      controlMode: ControlMode.Loading,
-      message: "Working on it...",
-      timeStamp: (new Date()).getTime()
-    });
   }
 
   public render(): JSX.Element {
@@ -99,5 +75,28 @@ export default class ExternalSharingDashboard extends React.Component<IExternalS
     else {
       this.log.logError(`ControlMode is not supported ${this.state.controlMode}`);
     }
+  }
+
+  private _updateState(): void {
+    if (!this.updatedOnce) {
+      this.updatedOnce = true;
+      this.log.logInfo("_updateState");
+      this._setStateToLoading();
+      this.props.store.getAllExtDocuments()
+      .then((r) => {
+        this.setState(r);
+        this.log.logInfo("_setStateToContent");
+      });
+    }
+  }
+
+  private _setStateToLoading(): void {
+    this.log.logInfo("_setStateToLoading");
+    this.setState({
+      extContent: [],
+      controlMode: ControlMode.Loading,
+      message: "Working on it...",
+      timeStamp: (new Date()).getTime()
+    });
   }
 }
