@@ -1,3 +1,4 @@
+<<<<<<< HEAD
 ## ext-sharing-2
 
 This is where you include your web part docs.
@@ -24,3 +25,6 @@ gulp test - TODO
 gulp watch - TODO
 gulp build - TODO
 gulp deploy - TODO
+=======
+# SPFxExternalSharingDashboard
+>>>>>>> da3a437f340508ab869ac914f8bc3e201afd0578
