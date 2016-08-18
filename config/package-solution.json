@@ -1,0 +1,10 @@
+{
+  "solution": {
+    "name": "ext-sharing-2-client-side-solution",
+    "id": "f134d0fc-2eb4-46e3-9e8f-11628e4f13cb",
+    "version": "1.0.0.0"
+  },
+  "paths": {
+    "zippedPackage": "ext-sharing-2.spapp"
+  }
+}
