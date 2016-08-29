@@ -14,8 +14,11 @@ import {
 
 export default class ExtContentFetcher implements ISecurableObjectStore {
 
+  private static response: IGetExtContentFuncResponse = null;
+
   public props: IExtContentFetcherProps;
   public timeStamp: number;
+
   private log: Logger;
 
   public constructor (props: IExtContentFetcherProps) {
@@ -26,6 +29,10 @@ export default class ExtContentFetcher implements ISecurableObjectStore {
 
   public getAllExtDocuments(): Promise<IGetExtContentFuncResponse> {
     this.log.logInfo("getAllExtDocuments()");
+
+    if (ExtContentFetcher.response !== null) {
+      return new Promise<IGetExtContentFuncResponse>((resolve) => resolve(ExtContentFetcher.response));
+    }
 
     // TODO : do some clever caching
     const rowLimit: number = 500; // TODO : we need to get many pages with this etc..
@@ -85,6 +92,7 @@ export default class ExtContentFetcher implements ISecurableObjectStore {
           else {
             const finalResults: IGetExtContentFuncResponse = this._transformSearchResults(r, this.props.noResultsString);
             this.timeStamp = finalResults.timeStamp;
+            ExtContentFetcher.response = finalResults;
             return finalResults;
           }
         });
