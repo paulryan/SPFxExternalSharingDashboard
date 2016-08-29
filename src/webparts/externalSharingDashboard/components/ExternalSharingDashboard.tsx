@@ -12,9 +12,7 @@ import {
 } from "../classes/Logger";
 
 import {
-  Label,
-  Spinner,
-  SpinnerType
+  Label
 } from "office-ui-fabric-react";
 
 import Table from "./Table";
@@ -29,7 +27,7 @@ interface ITableRowProps {
 
 export default class ExternalSharingDashboard extends React.Component<IExternalSharingDashboardProps, IGetExtContentFuncResponse> {
   private log: Logger;
-  private updatedOnce: boolean = false;
+  private updateStateInProgress: boolean = false;
 
   constructor() {
     super();
@@ -46,20 +44,27 @@ export default class ExternalSharingDashboard extends React.Component<IExternalS
     this._updateState();
   }
 
+  public componentWillReceiveProps(): void {
+    this.log.logInfo("componentWillReceiveProps");
+    this._setStateToLoading();
+  }
+
+  public shouldComponentUpdate(nextProps: IExternalSharingDashboardProps, nextState: IGetExtContentFuncResponse): boolean {
+    return !nextState || nextProps.contentProps.mode !== this.state.mode
+      || nextProps.contentProps.scope !== this.state.scope;
+  }
+
   public componentDidUpdate(): void {
     this.log.logInfo("componentDidUpdate");
-    if (this.state.timeStamp === this.props.store.timeStamp) {
-      // Do nothing, as the data will be the same
-    } else {
-      this._updateState();
-    }
+    this._updateState();
   }
 
   public render(): JSX.Element {
     this.log.logInfo("render");
     if (this.state && this.state.controlMode === ControlMode.Loading) {
       return (
-        <Spinner type={ SpinnerType.large } label={this.state.message} />
+        //<Spinner type={ SpinnerType.large } label={this.state.message} />
+        <div className="ms-font-l">{this.state.message}</div>
       );
     }
     else if (this.state && this.state.controlMode === ControlMode.Message) {
@@ -69,34 +74,45 @@ export default class ExternalSharingDashboard extends React.Component<IExternalS
     }
     else if (this.state && this.state.controlMode === ControlMode.Content) {
       return (
+        <div>
+        <div className="ms-font-xxl">{this.state.mode}</div>
+        <div className="ms-font-l">{this.state.scope}</div>
         <Table items={this.state.extContent} />
+        </div>
       );
     }
-    else {
+    else if (this.state && this.state.controlMode) {
       this.log.logError(`ControlMode is not supported ${this.state.controlMode}`);
+      return (<div className="ms-font-l">Error!</div>);
+    }
+    else {
+      this.log.logError(`State is undefined`);
+      //this.log.logInfo(`State is undefined`);
+      // This will occur is the state is not set in componentWillMount
+      return (
+        <div className="ms-font-l">Error!</div>
+      );
     }
   }
 
   private _updateState(): void {
-    if (!this.updatedOnce) {
-      this.updatedOnce = true;
-      this.log.logInfo("_updateState");
-      this._setStateToLoading();
-      this.props.store.getAllExtDocuments()
-      .then((r) => {
-        this.setState(r);
-        this.log.logInfo("_setStateToContent");
-      });
-    }
+      if (!this.updateStateInProgress) {
+        this.updateStateInProgress = true;
+        this.props.store.getExternalContent()
+        .then((r) => {
+          this.setState(r);
+          this.updateStateInProgress = false;
+        });
+      }
   }
 
   private _setStateToLoading(): void {
-    this.log.logInfo("_setStateToLoading");
     this.setState({
       extContent: [],
       controlMode: ControlMode.Loading,
       message: "Working on it...",
-      timeStamp: (new Date()).getTime()
+      mode: -1,
+      scope: -1
     });
   }
 }

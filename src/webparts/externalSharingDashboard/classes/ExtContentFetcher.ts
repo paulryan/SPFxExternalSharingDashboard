@@ -5,7 +5,8 @@ import {
   ISecurableObject,
   ISecurableObjectStore,
   Mode,
-  SPScope
+  SPScope,
+  SecurableObjectType
 } from "./Interfaces";
 
 import {
@@ -14,95 +15,116 @@ import {
 
 export default class ExtContentFetcher implements ISecurableObjectStore {
 
-  private static response: IGetExtContentFuncResponse = null;
-
   public props: IExtContentFetcherProps;
-  public timeStamp: number;
-
   private log: Logger;
 
   public constructor (props: IExtContentFetcherProps) {
     this.props = props;
     this.log = new Logger("ExtContentFetcher");
-    this.timeStamp = -1;
   }
 
-  public getAllExtDocuments(): Promise<IGetExtContentFuncResponse> {
-    this.log.logInfo("getAllExtDocuments()");
-
-    if (ExtContentFetcher.response !== null) {
-      return new Promise<IGetExtContentFuncResponse>((resolve) => resolve(ExtContentFetcher.response));
-    }
+  public getExternalContent(): Promise<IGetExtContentFuncResponse> {
+    const self: ExtContentFetcher = this;
+    self.log.logInfo("getExternalContent()");
 
     // TODO : do some clever caching
     const rowLimit: number = 500; // TODO : we need to get many pages with this etc..
-    const baseUri: string = this.props.context.pageContext.web.absoluteUrl + "/_api/search/query";
+    const baseUri: string = self.props.context.pageContext.web.absoluteUrl + "/_api/search/query";
 
-    const extContentFql: string = "" + this.props.managedProperyName + ":ext"; //":#ext#";
+    const extContentFql: string = "" + self.props.managedProperyName + ":ext"; //":#ext#";
 
-    let scopeFql: string = "";
-    if (this.props.scope === SPScope.SiteCollection) {
-      scopeFql = " SiteId:" + this.props.context.pageContext.site.id.toString();
+    let modeFql: string = "";
+    if (self.props.mode === Mode.AllExtSharedDocuments) {
+      modeFql = ""; // Do not need to restrict further
     }
-    else if (this.props.scope === SPScope.Site) {
-      scopeFql = " WebId:" + this.props.context.pageContext.web.id.toString();
-    }
-    else if (this.props.scope === SPScope.Tenant) {
-      // do nothing
+    else if (self.props.mode === Mode.MyExtSharedDocuments) {
+      // "MY" should represent things I have created or edited or shared.
+      const un: string = self.props.context.pageContext.user.loginName;
+      const me: string = un.substring(0, un.indexOf("@")); // TODO: get the query working with @ symbol.. .replace("@", "%40");
+      modeFql = ` (ModifiedBy:${me} OR CreatedBy:${me} OR ${self.props.managedProperyName}:${me})`; // Do not need to restrict further
+      //modeFql = ` ${self.props.managedProperyName}:${me}`;
     }
     else {
-      this.log.logError("Unsupported scope: " + this.props.scope);
+      self.log.logError("Unsupported mode: " + self.props.mode);
       return null;
     }
 
-    // "MY" should represent things I have created or edited or shared.
-    let modeFql: string = "";
-    if (this.props.mode === Mode.AllExtSharedDocuments || this.props.mode === Mode.MyExtSharedDocuments) {
-      modeFql = ""; //" IsDocument=1"; // TODO: Do something better than this
+    let scopeFql: string = "";
+    if (self.props.scope === SPScope.SiteCollection) {
+      scopeFql = " SiteId:" + self.props.context.pageContext.site.id.toString();
     }
-    else if (this.props.mode === Mode.AllExtSharedContainers || this.props.mode === Mode.MyExtSharedContainers) {
-      modeFql = " IsDocument=0"; // TODO: Do something better than this
+    else if (self.props.scope === SPScope.Site) {
+      scopeFql = " WebId:{" + self.props.context.pageContext.web.id.toString() + "}";
+    }
+    else if (self.props.scope === SPScope.Tenant) {
+      // do nothing
     }
     else {
-      this.log.logError("Unsupported mode: " + this.props.mode);
+      self.log.logError("Unsupported scope: " + self.props.scope);
       return null;
     }
 
     const queryText: string = "querytext='" + extContentFql + scopeFql + modeFql + "'";
-    const selectProps: string = "selectproperties='Title,ServerRedirectedURL,FileExtension'";
-    const finalUri: string = baseUri + "?" + queryText + "&" + selectProps + "&rowlimit=" + rowLimit;
+    const selectProps: string = "selectproperties='Title,Filename,ServerRedirectedURL,Path,FileExtension,UniqueID,SharedWithDetails,SiteTitle,SiteID,CrawlTime'";
+    const finalUri: string = baseUri + "?" + queryText + "&" + selectProps;
 
-    this.log.logInfo("Submitting request to " + finalUri);
+    const prom: Promise<IGetExtContentFuncResponse> = new Promise<IGetExtContentFuncResponse>((resolve: any, reject: any) => {
+      self._queryForAllItems(finalUri, 0, rowLimit, null, resolve, reject);
+    });
+    return prom;
+  }
 
-    // TODO: Tidy this up
-    return this.props.context.httpClient.get(finalUri)
+  private _queryForAllItems(uri: string, startIndex: number, rowlimit: number, results: IGetExtContentFuncResponse,
+                            resolve: any, reject: any): void {
+
+    const pagedUri: string = uri + "&startRow=" + startIndex + "&rowLimit=" + rowlimit;
+    this.log.logInfo("Submitting request to " + pagedUri);
+
+    this.props.context.httpClient.get(pagedUri)
       .then(
         (r1: Response) => {
-        return r1.json().then((r) => {
-          this.log.logInfo("Recieved response from " + finalUri);
+        r1.json().then((r) => {
+          this.log.logInfo("Recieved response from " + pagedUri);
           const errorMsg: string = r.error ? r.error.message : r.message;
           if (errorMsg) {
-            return {
+            reject({
               extContent: [],
               controlMode: ControlMode.Message,
-              message: errorMsg,
-              timeStamp: (new Date()).getTime()
-            };
+              message: errorMsg
+            });
           }
           else {
             const finalResults: IGetExtContentFuncResponse = this._transformSearchResults(r, this.props.noResultsString);
-            this.timeStamp = finalResults.timeStamp;
-            ExtContentFetcher.response = finalResults;
-            return finalResults;
+            if (results) {
+              results.extContent.push(...finalResults.extContent);
+            }
+            else {
+              results = finalResults;
+            }
+            let getAnotherPage: boolean = false;
+            if (finalResults.controlMode === ControlMode.Content) {
+              // Get the next page if results === rowlimit
+              const rowCount: number = r.PrimaryQueryResult.RelevantResults.RowCount;
+              if (rowCount === rowlimit && startIndex + rowCount < r.PrimaryQueryResult.RelevantResults.TotalRows) {
+                getAnotherPage = true;
+              }
+            }
+
+            if (getAnotherPage) {
+              // Recursive call
+              this._queryForAllItems(uri, startIndex + rowlimit, rowlimit, results, resolve, reject);
+            }
+            else {
+              resolve(results);
+            }
           }
         });
       }, (error: any) => {
-        return {
+        reject({
           extContent: [],
           controlMode: ControlMode.Message,
-          message: "Sorry, there was an error submitting the request",
-          timeStamp: (new Date()).getTime()
-        };
+          message: "Sorry, there was an error submitting the request"
+        });
       });
   }
 
@@ -121,8 +143,35 @@ export default class ExtContentFetcher implements ISecurableObjectStore {
           d.Cells.forEach((c: any) => {
             doc[c.Key] = c.Value;
           });
-          // TODO : convert to ISecurableObject
-          searchRowsSimplified.push(doc);
+
+          let sharedWithDetails: any = {};
+          if (doc.SharedWithDetails) {
+            sharedWithDetails = JSON.parse(doc.SharedWithDetails);
+          }
+          const sharedWith: string[] = [];
+          const sharedBy: string[] = [];
+
+          for (const sharedWithUser in sharedWithDetails) {
+            if (sharedWithDetails.hasOwnProperty(sharedWithUser)) {
+              sharedWith.push(sharedWithUser);
+              const sharedByUser: string = sharedWithDetails[sharedWithUser]["LoginName"];
+              sharedBy.push(sharedByUser);
+            }
+          }
+
+          searchRowsSimplified.push({
+            Title: doc.Filename,
+            FileExtension: doc.FileExtension,
+            LastModifiedTime: "", // doc.LastModifiedTime,
+            SiteID: doc.SiteID,
+            SiteTitle: doc.SiteTitle,
+            URL: doc.ServerRedirectedURL || doc.Path,
+            Type: SecurableObjectType.Document,
+            SharedBy: sharedBy,
+            SharedWith: sharedWith,
+            CrawlTime: doc.CrawlTime,
+            key: doc.UniqueID || doc.Path
+          });
         });
       } catch (e) {
         // TODO: log something?
@@ -140,7 +189,8 @@ export default class ExtContentFetcher implements ISecurableObjectStore {
       extContent: searchRowsSimplified,
       controlMode: shouldShowMessage ? ControlMode.Message : ControlMode.Content,
       message: message,
-      timeStamp: (new Date()).getTime()
+      mode: this.props.mode,
+      scope: this.props.scope
     };
   };
 }

@@ -17,7 +17,8 @@
       "mode": 1,
       "displayType": 1,
       "noResultsString": "No externally shared content was found",
-      "managedPropertyName": "SharedWithDetailsQueryable"
+      "managedPropertyName": "SharedWithDetailsQueryable",
+      "crawlTimeManagedPropertyName": "CrawlTime"
     }
   }]
 }

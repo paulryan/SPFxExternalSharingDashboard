@@ -1,41 +1,28 @@
 import {
-  ISecurableObjectStore,
+  ControlMode,
   IExtContentFetcherProps,
   IGetExtContentFuncResponse,
   ISecurableObject,
-  SecurableObjectType,
-  ControlMode
+  ISecurableObjectStore,
+  SecurableObjectType
 } from "../classes/Interfaces";
 
 export default class MockContentFetcher implements ISecurableObjectStore {
 
-  public timeStamp: number;
+  public props: IExtContentFetcherProps;
 
-  public constructor (props: IExtContentFetcherProps) {
-    this.timeStamp = -1;
-  }
-
-  public getAllExtDocuments(): Promise<IGetExtContentFuncResponse> {
-    return new Promise<IGetExtContentFuncResponse>((resolve) => {
-        this.timeStamp = (new Date()).getTime();
-        resolve({
-          extContent: this._content,
-          controlMode: ControlMode.Content,
-          message: "Mocked documents",
-          timeStamp: this.timeStamp
-        });
-    });
-  }
-
-  private _content: ISecurableObject[] = [
+  private content: ISecurableObject[] = [
     {
       Title: "My first document",
       URL: "https://www.google.com/01",
       Type: SecurableObjectType.Document,
       FileExtension: "docx",
       LastModifiedTime: (new Date()).toDateString(),
-      SharedWith: "Paul Ryan",
-      SharedBy: "Chris O'Brien",
+      SharedWith: ["Paul Ryan"],
+      SharedBy: ["Chris O'Brien"],
+      SiteID: "1",
+      SiteTitle: "Team Site",
+      CrawlTime: "Never",
       key: "1"
     },
     {
@@ -44,9 +31,28 @@ export default class MockContentFetcher implements ISecurableObjectStore {
       Type: SecurableObjectType.Document,
       FileExtension: "pptx",
       LastModifiedTime: (new Date()).toDateString(),
-      SharedWith: "Paul Ryan",
-      SharedBy: "Chris O'Brien",
+      SharedWith: ["Paul Ryan"],
+      SharedBy: ["Chris O'Brien"],
+      SiteID: "1",
+      SiteTitle: "Team Site",
+      CrawlTime: "Never",
       key: "2"
     }
   ];
+
+  public constructor (props: IExtContentFetcherProps) {
+    this.props = props;
+  }
+
+  public getExternalContent(): Promise<IGetExtContentFuncResponse> {
+    return new Promise<IGetExtContentFuncResponse>((resolve) => {
+        resolve({
+          extContent: this.content,
+          controlMode: ControlMode.Content,
+          message: "Mocked documents",
+          mode: this.props.mode,
+          scope: this.props.scope
+        });
+    });
+  }
 }

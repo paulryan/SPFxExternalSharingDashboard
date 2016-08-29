@@ -1,7 +1,7 @@
-import * as assert from 'assert';
+import * as assert from "assert";
 
-describe('ExternalSharingDashboardWebPart', () => {
-  it('should do something', () => {
+describe("ExternalSharingDashboardWebPart", () => {
+  it("should do something", () => {
     assert.ok(true);
   });
 });

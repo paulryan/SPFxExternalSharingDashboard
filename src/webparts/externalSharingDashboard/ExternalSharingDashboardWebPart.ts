@@ -7,6 +7,8 @@ import {
   IPropertyPaneSettings,
   IWebPartContext,
   PropertyPaneDropdown,
+  PropertyPaneLabel,
+  PropertyPaneLink,
   PropertyPaneTextField
 } from "@microsoft/sp-client-preview";
 
@@ -64,7 +66,10 @@ export default class ExternalSharingDashboardWebPart extends BaseClientSideWebPa
     // Create appropriate ReactElement for displaying content
     let element: React.ReactElement<IExternalSharingDashboardProps> = null;
     if (this.properties.displayType === DisplayType.Table) {
-      element = React.createElement(ExternalSharingDashboard, { store: extContentStore });
+      element = React.createElement(ExternalSharingDashboard, {
+        store: extContentStore,
+        contentProps: contentFecherProps
+      });
     }
     else {
       this.log.logError("Unsupported display type: " + this.properties.displayType);
@@ -98,9 +103,9 @@ export default class ExternalSharingDashboardWebPart extends BaseClientSideWebPa
                   label: "What type content do you want to see?",
                   options: [
                     { key: Mode.AllExtSharedDocuments, text: "All externally shared documents" },
-                    { key: Mode.MyExtSharedDocuments, text: "Documents which I have shared externally" },
-                    { key: Mode.AllExtSharedContainers, text: "All externally shared sites, libraries, and folders" },
-                    { key: Mode.MyExtSharedContainers, text: "Sites, libraries, and folders which I have shared externally" }
+                    { key: Mode.MyExtSharedDocuments, text: "Documents which I have shared externally" }
+                    // { key: Mode.AllExtSharedContainers, text: "All externally shared sites, libraries, and folders" },
+                    // { key: Mode.MyExtSharedContainers, text: "Sites, libraries, and folders which I have shared externally" }
                   ]
                 }),
                 PropertyPaneDropdown("displayType", {
@@ -118,13 +123,28 @@ export default class ExternalSharingDashboardWebPart extends BaseClientSideWebPa
             {
               groupName: "Other",
               groupFields: [
+                PropertyPaneTextField("noResultsString", {
+                  label: "What message should we display when there are no results?"
+                }),
                 PropertyPaneTextField("managedPropertyName", {
-                  label: "What is the name of the Managed Property with shared details?",
+                  label: "What is the name of the queryable Managed Property containing shared with details?",
                   description: `This property must be configured as such:
                                 Text, Multi, Queryable, Retrievable, and be mapped to 'ows_SharedWithDetails'`
                 }),
-                PropertyPaneTextField("noResultsString", {
-                  label: "What message should we display when there are no results?"
+                PropertyPaneTextField("crawlTimeManagedPropertyName", {
+                  label: "What is the name of the Managed Property containing crawl time details?",
+                  description: `This property must be configured as such:
+                                Text, Retrievable, and be mapped to 'Internal:323'`
+                }),
+                PropertyPaneLabel("labelproperty01", {
+                  text: "Use the following link to download a search schema file to import the above managed properties:"
+                }),
+                PropertyPaneLink("linkproperty", {
+                  href: "https://www.bing.com",
+                  text: "Search schema"
+                }),
+                PropertyPaneLabel("labelproperty01", {
+                  text: "_"
                 })
               ]
             }

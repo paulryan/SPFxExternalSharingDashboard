@@ -11,8 +11,8 @@ export enum SPScope {
 export enum Mode {
   AllExtSharedDocuments = 1,
   MyExtSharedDocuments = 2,
-  AllExtSharedContainers = 3, // May not be possible
-  MyExtSharedContainers = 4, // May not be possible
+  // AllExtSharedContainers = 3,
+  // MyExtSharedContainers = 4,
 }
 
 export enum DisplayType {
@@ -25,9 +25,9 @@ export enum DisplayType {
 
 export enum SecurableObjectType {
   Document = 1,
-  Library = 2,
-  Web = 3,
-  Site = 4
+  // Library = 2,
+  // Web = 3,
+  // Site = 4
 }
 
 export enum ControlMode {
@@ -48,17 +48,24 @@ export interface IGetExtContentFuncResponse {
   extContent: ISecurableObject[];
   controlMode: ControlMode;
   message: string;
-  timeStamp: number;
+  scope: SPScope;
+  mode: Mode;
 }
 
 export interface ISecurableObject {
+  // That match managed property names
   Title: string;
-  URL: string;
-  Type: SecurableObjectType;
   FileExtension: string;
   LastModifiedTime: string;
-  SharedWith: string;
-  SharedBy: string;
+  SiteTitle: string;
+  SiteID: string;
+  CrawlTime: string;
+
+  // That require mapping/transforming from managed property
+  URL: string;
+  Type: SecurableObjectType;
+  SharedWith: string[];
+  SharedBy: string[];
   key: string;
 }
 
@@ -67,11 +74,7 @@ export interface IGetExtContentFunc {
 }
 
 export interface ISecurableObjectStore {
-  timeStamp: number;
-  getAllExtDocuments: IGetExtContentFunc;
-  // getMyExtDocuments: IGetExtContentFunc;
-  // getAllExtNonDocuments: IGetExtContentFunc;
-  // getMyExtNonDocuments: IGetExtContentFunc;
+  getExternalContent: IGetExtContentFunc;
 }
 
 export interface IExternalSharingDashboardWebPartProps {
@@ -84,6 +87,7 @@ export interface IExternalSharingDashboardWebPartProps {
 
 export interface IExternalSharingDashboardProps {
   store: ISecurableObjectStore;
+  contentProps: IExtContentFetcherProps;
 }
 
 export interface ITableProps {
