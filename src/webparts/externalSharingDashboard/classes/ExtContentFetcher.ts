@@ -181,6 +181,9 @@ export default class ExtContentFetcher implements ISecurableObjectStore {
             }
           }
 
+          sharedWith.sort();
+          sharedBy.sort();
+
           const lastModifedTime: Date = new Date(doc.LastModifiedTime);
           const crawlTime: Date = new Date(doc.CrawlTime);
           const now: Date = new Date();

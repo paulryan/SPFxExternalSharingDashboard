@@ -156,8 +156,8 @@ export default class Table extends React.Component<ITable, ITable> {
   private compareTableRow (columnIndex: number, rowA: ITableRow, rowB: ITableRow): number {
     const cellA: ITableCell<any> = rowA.cells[columnIndex];
     const cellB: ITableCell<any> = rowB.cells[columnIndex];
-    const cellDataA: any = cellA.displayData;
-    const cellDataB: any = cellB.displayData;
+    const cellDataA: any = cellA.sortableData;
+    const cellDataB: any = cellB.sortableData;
 
     let compareValue: number = 0;
     if (typeof cellDataA === "string" && typeof cellDataB === "string") {
@@ -168,7 +168,8 @@ export default class Table extends React.Component<ITable, ITable> {
                       : (cellDataA < cellDataB) ? -1 : 0;
     }
     else if (cellDataA instanceof Array && cellDataB instanceof Array) {
-      // TODO: ???
+      // sort on the display values... not best solution
+      compareValue = cellA.displayData.localeCompare(cellB.displayData);
     }
     return compareValue;
   }

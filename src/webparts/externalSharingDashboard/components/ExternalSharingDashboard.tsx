@@ -126,7 +126,7 @@ export default class ExternalSharingDashboard extends React.Component<IExternalS
               sortableData: cellSortableData.data,
               displayData: cellSortableData.displayValue,
               href: href,
-              key: securableObj.key + columnName.sortableData
+              key: columnName.sortableData
             });
           }
           else {
