@@ -11,7 +11,7 @@
     "group": { "default": "Security" },
     "title": { "default": "Externally Shared Documents" },
     "description": { "default": "Keep an eye on external users" },
-    "officeFabricIconFontName": "Page",
+    "officeFabricIconFontName": "Share",
     "properties": {
       "scope": 1,
       "mode": 1,

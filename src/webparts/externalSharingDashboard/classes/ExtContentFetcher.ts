@@ -33,7 +33,7 @@ export default class ExtContentFetcher implements ISecurableObjectStore {
     const rowLimit: number = 500;
     const baseUri: string = self.props.context.pageContext.web.absoluteUrl + "/_api/search/query";
 
-    const extContentFql: string = "" + self.props.managedProperyName + ":ext"; //":#ext#";
+    const extContentFql: string = "*"; //"" + self.props.managedProperyName + ":ext"; //":#ext#";
 
     let modeFql: string = "";
     if (self.props.mode === Mode.AllExtSharedDocuments) {
@@ -183,6 +183,9 @@ export default class ExtContentFetcher implements ISecurableObjectStore {
 
           const lastModifedTime: Date = new Date(doc.LastModifiedTime);
           const crawlTime: Date = new Date(doc.CrawlTime);
+          const now: Date = new Date();
+          const old: Date = new Date(now.getFullYear(), now.getMonth() - 1, now.getDate());
+          const isCrawlTimeInvalid: boolean = (crawlTime > now || crawlTime < old);
 
           searchRowsSimplified.push({
             title: { data: doc.Filename, displayValue: doc.Filename},
@@ -194,7 +197,7 @@ export default class ExtContentFetcher implements ISecurableObjectStore {
             type: { data: SecurableObjectType.Document, displayValue: "Document"},
             sharedBy: { data: sharedBy, displayValue: sharedBy.join(", ")},
             sharedWith: { data: sharedWith, displayValue: sharedWith.join(", ")},
-            crawlTime: { data: crawlTime, displayValue: this.toColloquialDateString(crawlTime)},
+            crawlTime: { data: crawlTime, displayValue: isCrawlTimeInvalid ? "" : this.toColloquialDateString(crawlTime)},
             key: doc.UniqueID || doc.Path
           });
         });

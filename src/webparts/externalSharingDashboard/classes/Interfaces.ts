@@ -78,7 +78,8 @@ export interface ITable {
   rows: ITableRow[];
   pageSize: number;
   pageStartIndex: number;
-  currentSortOrder: string;
+  currentSort: number;
+  currentSortDescending: boolean;
 }
 
 export interface ITableRow {
@@ -89,5 +90,7 @@ export interface ITableRow {
 export interface ITableCell<Type> {
   sortableData: Type;
   displayData: string;
+  href: string;
+  onClick?: any;
   key: string;
 }

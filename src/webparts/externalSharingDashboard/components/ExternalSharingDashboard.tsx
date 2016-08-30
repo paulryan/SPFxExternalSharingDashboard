@@ -106,12 +106,13 @@ export default class ExternalSharingDashboard extends React.Component<IExternalS
 
       // TODO : In cases with lots of data it will not be okay to process all data
       // upfront - only the current page should be processed?
+      const columnWithHref: string = "title";
       const columns: ITableCell<string>[] = [
-        { sortableData: "title", displayData: "Title", key: "headerCellTitle"},
-        { sortableData: "sharedWith", displayData: "Shared With", key: "headerCellSharedWith"},
-        { sortableData: "sharedBy", displayData: "Shared By", key: "headerCellSharedBy"},
-        { sortableData: "siteTitle", displayData: "Site Title", key: "headerCellSiteTitle"},
-        { sortableData: "crawlTime", displayData: "Accurate as of", key: "headerCellCrawlTime"}
+        { sortableData: "title", displayData: "Title", href: null, key: "headerCellTitle"},
+        { sortableData: "sharedWith", displayData: "Shared With", href: null, key: "headerCellSharedWith"},
+        { sortableData: "sharedBy", displayData: "Shared By", href: null, key: "headerCellSharedBy"},
+        { sortableData: "siteTitle", displayData: "Site Title", href: null, key: "headerCellSiteTitle"},
+        { sortableData: "crawlTime", displayData: "Accurate as of", href: null, key: "headerCellCrawlTime"}
       ];
 
       const rows: ITableRow[] = [];
@@ -120,9 +121,11 @@ export default class ExternalSharingDashboard extends React.Component<IExternalS
         columns.forEach((columnName) => {
           const cellSortableData: ISecurableObjectProperty<any> = securableObj[columnName.sortableData];
           if (cellSortableData) {
+            const href: string = (columnName.sortableData === columnWithHref ? securableObj.url.data : null);
             newRow.cells.push({
               sortableData: cellSortableData.data,
               displayData: cellSortableData.displayValue,
+              href: href,
               key: securableObj.key + columnName.sortableData
             });
           }
@@ -132,6 +135,7 @@ export default class ExternalSharingDashboard extends React.Component<IExternalS
             newRow.cells.push({
               sortableData: "?",
               displayData: "",
+              href: null,
               key: securableObj.key + columnName.sortableData
             });
           }
@@ -142,7 +146,7 @@ export default class ExternalSharingDashboard extends React.Component<IExternalS
       return (
         <div>
           {headerControls}
-          <Table columns={{cells:columns, key:"headerRow" }} rows={rows} pageSize={10} pageStartIndex={0} currentSortOrder="" />
+          <Table columns={{cells:columns, key:"headerRow" }} rows={rows} pageSize={10} pageStartIndex={0} currentSort={-1} currentSortDescending={true} />
         </div>
       );
     }
