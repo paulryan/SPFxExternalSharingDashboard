@@ -21,12 +21,17 @@ import ExternalSharingDashboard from "./components/ExternalSharingDashboard";
 
 import {
   DisplayType,
+  GetDisplayTermForEnumMode,
+  GetDisplayTermForEnumSPScope,
+  Mode,
+  SPScope
+} from "./classes/Enums";
+
+import {
   IExtContentFetcherProps,
   IExternalSharingDashboardProps,
   IExternalSharingDashboardWebPartProps,
-  ISecurableObjectStore,
-  Mode,
-  SPScope
+  ISecurableObjectStore
 } from "./classes/Interfaces";
 
 import ExtContentFetcher from "./classes/ExtContentFetcher";
@@ -94,16 +99,16 @@ export default class ExternalSharingDashboardWebPart extends BaseClientSideWebPa
                 PropertyPaneDropdown("scope", {
                   label: "Where should we look for externally shared content?",
                   options: [
-                    { key: SPScope.Tenant, text: "Across the entire tenancy" },
-                    { key: SPScope.SiteCollection, text: "Only within this site collection" },
-                    { key: SPScope.Site, text: "Only in this site (and in child sites)" }
+                    { key: SPScope.Tenant, text: GetDisplayTermForEnumSPScope(SPScope.Tenant) },
+                    { key: SPScope.SiteCollection, text: GetDisplayTermForEnumSPScope(SPScope.SiteCollection) },
+                    { key: SPScope.Site, text: GetDisplayTermForEnumSPScope(SPScope.Site) }
                   ]
                 }),
                 PropertyPaneDropdown("mode", {
                   label: "What type content do you want to see?",
                   options: [
-                    { key: Mode.AllExtSharedDocuments, text: "All externally shared documents" },
-                    { key: Mode.MyExtSharedDocuments, text: "Documents which I have shared externally" }
+                    { key: Mode.AllExtSharedDocuments, text: GetDisplayTermForEnumMode(Mode.AllExtSharedDocuments) },
+                    { key: Mode.MyExtSharedDocuments, text: GetDisplayTermForEnumMode(Mode.MyExtSharedDocuments) }
                     // { key: Mode.AllExtSharedContainers, text: "All externally shared sites, libraries, and folders" },
                     // { key: Mode.MyExtSharedContainers, text: "Sites, libraries, and folders which I have shared externally" }
                   ]
@@ -139,11 +144,11 @@ export default class ExternalSharingDashboardWebPart extends BaseClientSideWebPa
                 PropertyPaneLabel("labelproperty01", {
                   text: "Use the following link to download a search schema file to import the above managed properties:"
                 }),
-                PropertyPaneLink("linkproperty", {
+                PropertyPaneLink("linkproperty01", {
                   href: "https://www.bing.com",
                   text: "Search schema"
                 }),
-                PropertyPaneLabel("labelproperty01", {
+                PropertyPaneLabel("labelproperty02", {
                   text: "_"
                 })
               ]

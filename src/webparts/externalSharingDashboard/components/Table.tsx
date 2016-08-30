@@ -1,9 +1,8 @@
 import * as React from "react";
 
 import {
-  ISecurableObject,
-  ITableProps,
-  SecurableObjectType
+  ITable,
+  ITableCell
 } from "../classes/Interfaces";
 
 import {
@@ -15,26 +14,18 @@ import {
 
 import styles from "../ExternalSharingDashboard.module.scss";
 
-class TableRow extends React.Component<ISecurableObject, {}> {
-  private static tableRowClasses: string = css("ms-Table-row");
+class TableCell extends React.Component<ITableCell<any>, {}> {
   private static tableCellClasses: string = css(styles.msTableCellNoWrap, "ms-Table-cell");
-
   public render(): JSX.Element {
     return (
-      <tr className={TableRow.tableRowClasses}>
-        <td className={TableRow.tableCellClasses}>{this.props.CrawlTime}</td>
-        <td className={TableRow.tableCellClasses}>{this.props.Title}</td>
-        <td className={TableRow.tableCellClasses}>{this.props.SharedWith}</td>
-        <td className={TableRow.tableCellClasses}>{this.props.SharedBy}</td>
-        <td className={TableRow.tableCellClasses}>{this.props.SiteTitle}</td>
-        <td className={TableRow.tableCellClasses}>{this.props.FileExtension}</td>
-      </tr>
+      <td className={TableCell.tableCellClasses}>{this.props.displayData}</td>
     );
   }
 }
 
-export default class Table extends React.Component<ITableProps, {}> {
+export default class Table extends React.Component<ITable, {}> {
   private static tableClasses: string = css("ms-Table");
+  private static tableRowClasses: string = css("ms-Table-row");
 
   public render(): JSX.Element {
       return (
@@ -44,25 +35,26 @@ export default class Table extends React.Component<ITableProps, {}> {
             <div className={styles.msTableOverflow}>
               <table className={Table.tableClasses}>
                 <thead>
-                  <TableRow
-                    key="headerRow"
-                    Type={SecurableObjectType.Document}
-                    Title="Title"
-                    FileExtension="File Extension"
-                    LastModifiedTime="Last Modified Time"
-                    SiteTitle="Site Title"
-                    SiteID="Site ID"
-                    SharedBy={[]}
-                    SharedWith={[]}
-                    CrawlTime="Crawl Time"
-                    URL="URL" />
+                  <tr className={Table.tableRowClasses}>
+                    {this.props.columns.cells.map(c => {
+                        return (
+                          <TableCell {...c} />
+                        );
+                      })}
+                  </tr>
                 </thead>
                 <tbody>
-                  {this.props.items.map(c => {
-                    return (
-                      <TableRow {...c} />
-                    );
-                  })}
+                    {this.props.rows.map(r => {
+                      return (
+                        <tr key={r.key} className={Table.tableRowClasses}>
+                          {r.cells.map(c => {
+                            return (
+                              <TableCell {...c} />
+                            );
+                          })}
+                        </tr>
+                      );
+                    })}
                 </tbody>
               </table>
             </div>

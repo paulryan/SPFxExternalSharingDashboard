@@ -2,9 +2,17 @@ import * as React from "react";
 
 import {
   ControlMode,
+  GetDisplayTermForEnumMode,
+  GetDisplayTermForEnumSPScope
+} from "../classes/Enums";
+
+import {
   IExternalSharingDashboardProps,
   IGetExtContentFuncResponse,
-  ISecurableObject
+  ISecurableObject,
+  ISecurableObjectProperty,
+  ITableCell,
+  ITableRow
 } from "../classes/Interfaces";
 
 import {
@@ -27,7 +35,15 @@ interface ITableRowProps {
 
 export default class ExternalSharingDashboard extends React.Component<IExternalSharingDashboardProps, IGetExtContentFuncResponse> {
   private log: Logger;
-  private updateStateInProgress: boolean = false;
+  private isUpdateStateInProgress: boolean = false;
+
+  // Lifecycle methods are called as follows:
+  // componentWillMount     (set state to Loading)
+  // render                 (loading)
+  // componentDidMount      (fetch ext content)
+  // shouldComponentUpdate  (on response received)
+  // render                 (content)
+  // componentDidUpdate     (ignored as request in progress..?)
 
   constructor() {
     super();
@@ -49,8 +65,9 @@ export default class ExternalSharingDashboard extends React.Component<IExternalS
     this._setStateToLoading();
   }
 
-  public shouldComponentUpdate(nextProps: IExternalSharingDashboardProps, nextState: IGetExtContentFuncResponse): boolean {
-    return !nextState || nextProps.contentProps.mode !== this.state.mode
+  public shouldComponentUpdate(nextProps: IExternalSharingDashboardProps): boolean {
+    this.log.logInfo("shouldComponentUpdate");
+    return !this.state || nextProps.contentProps.mode !== this.state.mode
       || nextProps.contentProps.scope !== this.state.scope;
   }
 
@@ -61,23 +78,71 @@ export default class ExternalSharingDashboard extends React.Component<IExternalS
 
   public render(): JSX.Element {
     this.log.logInfo("render");
+    const headerControls: JSX.Element = (
+      <div>
+        <div className="ms-font-xxl">External Sharing Dashboard</div>
+        <div className="ms-font-l">{GetDisplayTermForEnumMode(this.state.mode) + " " + GetDisplayTermForEnumSPScope(this.state.scope).toLowerCase()}</div>
+      </div>
+    );
+
     if (this.state && this.state.controlMode === ControlMode.Loading) {
       return (
-        //<Spinner type={ SpinnerType.large } label={this.state.message} />
-        <div className="ms-font-l">{this.state.message}</div>
+        <div>
+          {headerControls}
+          <div className="ms-font-l">{this.state.message}</div>
+        </div>
       );
+      //<Spinner type={ SpinnerType.large } label={this.state.message} />
     }
     else if (this.state && this.state.controlMode === ControlMode.Message) {
       return (
-        <Label>{this.state.message}</Label>
+        <div>
+          {headerControls}
+          <Label>{this.state.message}</Label>
+        </div>
       );
     }
     else if (this.state && this.state.controlMode === ControlMode.Content) {
+
+      // TODO : In cases with lots of data it will not be okay to process all data
+      // upfront - only the current page should be processed?
+      const columns: ITableCell<string>[] = [
+        { sortableData: "title", displayData: "Title", key: "headerCellTitle"},
+        { sortableData: "sharedWith", displayData: "Shared With", key: "headerCellSharedWith"},
+        { sortableData: "sharedBy", displayData: "Shared By", key: "headerCellSharedBy"},
+        { sortableData: "siteTitle", displayData: "Site Title", key: "headerCellSiteTitle"},
+        { sortableData: "crawlTime", displayData: "Accurate as of", key: "headerCellCrawlTime"}
+      ];
+
+      const rows: ITableRow[] = [];
+      this.state.extContent.forEach((securableObj) => {
+        const newRow: ITableRow = { cells: [], key: securableObj.key};
+        columns.forEach((columnName) => {
+          const cellSortableData: ISecurableObjectProperty<any> = securableObj[columnName.sortableData];
+          if (cellSortableData) {
+            newRow.cells.push({
+              sortableData: cellSortableData.data,
+              displayData: cellSortableData.displayValue,
+              key: securableObj.key + columnName.sortableData
+            });
+          }
+          else {
+            this.log.logError("Column value not present on row: " + columnName.sortableData);
+            // Still add a cell to so that the rows do go out of line
+            newRow.cells.push({
+              sortableData: "?",
+              displayData: "",
+              key: securableObj.key + columnName.sortableData
+            });
+          }
+        });
+        rows.push(newRow);
+      });
+
       return (
         <div>
-        <div className="ms-font-xxl">{this.state.mode}</div>
-        <div className="ms-font-l">{this.state.scope}</div>
-        <Table items={this.state.extContent} />
+          {headerControls}
+          <Table columns={{cells:columns, key:"headerRow" }} rows={rows} pageSize={10} pageStartIndex={0} currentSortOrder="" />
         </div>
       );
     }
@@ -96,14 +161,17 @@ export default class ExternalSharingDashboard extends React.Component<IExternalS
   }
 
   private _updateState(): void {
-      if (!this.updateStateInProgress) {
-        this.updateStateInProgress = true;
-        this.props.store.getExternalContent()
-        .then((r) => {
-          this.setState(r);
-          this.updateStateInProgress = false;
-        });
-      }
+    if (!this.isUpdateStateInProgress) {
+      this.isUpdateStateInProgress = true;
+      this.props.store.getExternalContent()
+      .then((r) => {
+        this.setState(r);
+        this.isUpdateStateInProgress = false;
+      });
+    }
+    else {
+      this.log.logInfo("update state ignored as request is already in progress");
+    }
   }
 
   private _setStateToLoading(): void {

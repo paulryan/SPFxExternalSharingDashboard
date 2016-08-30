@@ -1,10 +1,13 @@
 import {
   ControlMode,
+  SecurableObjectType
+} from "../classes/Enums";
+
+import {
   IExtContentFetcherProps,
   IGetExtContentFuncResponse,
   ISecurableObject,
-  ISecurableObjectStore,
-  SecurableObjectType
+  ISecurableObjectStore
 } from "../classes/Interfaces";
 
 export default class MockContentFetcher implements ISecurableObjectStore {
@@ -13,29 +16,29 @@ export default class MockContentFetcher implements ISecurableObjectStore {
 
   private content: ISecurableObject[] = [
     {
-      Title: "My first document",
-      URL: "https://www.google.com/01",
-      Type: SecurableObjectType.Document,
-      FileExtension: "docx",
-      LastModifiedTime: (new Date()).toDateString(),
-      SharedWith: ["Paul Ryan"],
-      SharedBy: ["Chris O'Brien"],
-      SiteID: "1",
-      SiteTitle: "Team Site",
-      CrawlTime: "Never",
+      title: { data: "My first document", displayValue: "My first document" },
+      url: { data: "https://www.google.com/01", displayValue: "https://www.google.com/01" },
+      type: { data: SecurableObjectType.Document, displayValue: "Document" },
+      fileExtension: { data: "docx", displayValue: "docx" },
+      lastModifiedTime: { data: new Date(), displayValue: (new Date()).toDateString() },
+      sharedWith: { data: ["Paul Ryan"], displayValue: "Paul Ryan" },
+      sharedBy: { data: ["Chris O'Brien"], displayValue: "Chris O'Brien" },
+      siteID: { data: "1", displayValue: "1" },
+      siteTitle: { data: "Team Site", displayValue: "Team Site" },
+      crawlTime: { data: new Date(), displayValue: "Never" },
       key: "1"
     },
     {
-      Title: "My second document",
-      URL: "https://www.google.com/02",
-      Type: SecurableObjectType.Document,
-      FileExtension: "pptx",
-      LastModifiedTime: (new Date()).toDateString(),
-      SharedWith: ["Paul Ryan"],
-      SharedBy: ["Chris O'Brien"],
-      SiteID: "1",
-      SiteTitle: "Team Site",
-      CrawlTime: "Never",
+      title: { data: "My second document", displayValue: "My second document" },
+      url: { data: "https://www.google.com/02", displayValue: "https://www.google.com/02" },
+      type: { data: SecurableObjectType.Document, displayValue: "Document" },
+      fileExtension: { data: "docx", displayValue: "docx" },
+      lastModifiedTime: { data: new Date(), displayValue: (new Date()).toDateString() },
+      sharedWith: { data: ["Paul Ryan"], displayValue: "Paul Ryan" },
+      sharedBy: { data: ["Chris O'Brien"], displayValue: "Chris O'Brien" },
+      siteID: { data: "1", displayValue: "1" },
+      siteTitle: { data: "Team Site", displayValue: "Team Site" },
+      crawlTime: { data: new Date(), displayValue: "Never" },
       key: "2"
     }
   ];

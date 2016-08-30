@@ -2,39 +2,13 @@ import {
   IWebPartContext
 } from "@microsoft/sp-client-preview";
 
-export enum SPScope {
-  Tenant = 1,
-  SiteCollection = 2,
-  Site = 3
-}
-
-export enum Mode {
-  AllExtSharedDocuments = 1,
-  MyExtSharedDocuments = 2,
-  // AllExtSharedContainers = 3,
-  // MyExtSharedContainers = 4,
-}
-
-export enum DisplayType {
-  Table = 1,
-  Tree = 2,
-  BySite = 3,
-  ByUser = 4,
-  OverTime = 5
-}
-
-export enum SecurableObjectType {
-  Document = 1,
-  // Library = 2,
-  // Web = 3,
-  // Site = 4
-}
-
-export enum ControlMode {
-  Loading = 1,
-  Message = 2,
-  Content = 3
-}
+import {
+  ControlMode,
+  DisplayType,
+  Mode,
+  SPScope,
+  SecurableObjectType
+} from "./Enums";
 
 export interface IExtContentFetcherProps {
   context: IWebPartContext;
@@ -54,19 +28,24 @@ export interface IGetExtContentFuncResponse {
 
 export interface ISecurableObject {
   // That match managed property names
-  Title: string;
-  FileExtension: string;
-  LastModifiedTime: string;
-  SiteTitle: string;
-  SiteID: string;
-  CrawlTime: string;
+  title: ISecurableObjectProperty<string>;
+  fileExtension: ISecurableObjectProperty<string>;
+  lastModifiedTime: ISecurableObjectProperty<Date>;
+  siteTitle: ISecurableObjectProperty<string>;
+  siteID: ISecurableObjectProperty<string>;
+  crawlTime: ISecurableObjectProperty<Date>;
 
   // That require mapping/transforming from managed property
-  URL: string;
-  Type: SecurableObjectType;
-  SharedWith: string[];
-  SharedBy: string[];
+  url: ISecurableObjectProperty<string>;
+  type: ISecurableObjectProperty<SecurableObjectType>;
+  sharedWith: ISecurableObjectProperty<string[]>;
+  sharedBy: ISecurableObjectProperty<string[]>;
   key: string;
+}
+
+export interface ISecurableObjectProperty<Type> {
+  data: Type;
+  displayValue: string;
 }
 
 export interface IGetExtContentFunc {
@@ -90,6 +69,25 @@ export interface IExternalSharingDashboardProps {
   contentProps: IExtContentFetcherProps;
 }
 
-export interface ITableProps {
-  items: ISecurableObject[];
+// export interface ITableProps {
+//   items: ISecurableObject[];
+// }
+
+export interface ITable {
+  columns: ITableRow;
+  rows: ITableRow[];
+  pageSize: number;
+  pageStartIndex: number;
+  currentSortOrder: string;
+}
+
+export interface ITableRow {
+  cells: ITableCell<any>[];
+  key: string;
+}
+
+export interface ITableCell<Type> {
+  sortableData: Type;
+  displayData: string;
+  key: string;
 }

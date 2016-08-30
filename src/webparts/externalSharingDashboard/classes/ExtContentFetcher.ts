@@ -1,12 +1,15 @@
 import {
   ControlMode,
-  IExtContentFetcherProps,
-  IGetExtContentFuncResponse,
-  ISecurableObject,
-  ISecurableObjectStore,
   Mode,
   SPScope,
   SecurableObjectType
+} from "./Enums";
+
+import {
+  IExtContentFetcherProps,
+  IGetExtContentFuncResponse,
+  ISecurableObject,
+  ISecurableObjectStore
 } from "./Interfaces";
 
 import {
@@ -27,8 +30,7 @@ export default class ExtContentFetcher implements ISecurableObjectStore {
     const self: ExtContentFetcher = this;
     self.log.logInfo("getExternalContent()");
 
-    // TODO : do some clever caching
-    const rowLimit: number = 500; // TODO : we need to get many pages with this etc..
+    const rowLimit: number = 500;
     const baseUri: string = self.props.context.pageContext.web.absoluteUrl + "/_api/search/query";
 
     const extContentFql: string = "" + self.props.managedProperyName + ":ext"; //":#ext#";
@@ -41,8 +43,7 @@ export default class ExtContentFetcher implements ISecurableObjectStore {
       // "MY" should represent things I have created or edited or shared.
       const un: string = self.props.context.pageContext.user.loginName;
       const me: string = un.substring(0, un.indexOf("@")); // TODO: get the query working with @ symbol.. .replace("@", "%40");
-      modeFql = ` (ModifiedBy:${me} OR CreatedBy:${me} OR ${self.props.managedProperyName}:${me})`; // Do not need to restrict further
-      //modeFql = ` ${self.props.managedProperyName}:${me}`;
+      modeFql = ` (ModifiedBy:${me} OR CreatedBy:${me} OR ${self.props.managedProperyName}:${me})`;
     }
     else {
       self.log.logError("Unsupported mode: " + self.props.mode);
@@ -128,6 +129,26 @@ export default class ExtContentFetcher implements ISecurableObjectStore {
       });
   }
 
+  private _parseDisplayNameFromExtUserAccountName(extUserAccountName: string): string {
+    let extUserDisplayName: string = "";
+    if (extUserAccountName) {
+      // We want the bit betwee the last index of | and the first index of #
+      let startIndex: number = extUserAccountName.lastIndexOf("|");
+      if (startIndex < 0) {
+        startIndex = 0;
+      }
+      else {
+        startIndex += "|".length;
+      }
+      let endIndex: number = extUserAccountName.indexOf("#", startIndex);
+      if (endIndex < 0) {
+        endIndex = extUserAccountName.length;
+      }
+      extUserDisplayName = extUserAccountName.substring(startIndex, endIndex);
+    }
+    return extUserDisplayName;
+  }
+
   private _transformSearchResults(response: any, noResultsString: string): IGetExtContentFuncResponse {
     // Simplify the data strucutre
     let shouldShowMessage: boolean = false;
@@ -153,26 +174,31 @@ export default class ExtContentFetcher implements ISecurableObjectStore {
 
           for (const sharedWithUser in sharedWithDetails) {
             if (sharedWithDetails.hasOwnProperty(sharedWithUser)) {
-              sharedWith.push(sharedWithUser);
+              const sharedWithUserDisplayName: string = this._parseDisplayNameFromExtUserAccountName(sharedWithUser);
+              sharedWith.push(sharedWithUserDisplayName);
               const sharedByUser: string = sharedWithDetails[sharedWithUser]["LoginName"];
               sharedBy.push(sharedByUser);
             }
           }
 
+          const lastModifedTime: Date = new Date(doc.LastModifiedTime);
+          const crawlTime: Date = new Date(doc.CrawlTime);
+
           searchRowsSimplified.push({
-            Title: doc.Filename,
-            FileExtension: doc.FileExtension,
-            LastModifiedTime: "", // doc.LastModifiedTime,
-            SiteID: doc.SiteID,
-            SiteTitle: doc.SiteTitle,
-            URL: doc.ServerRedirectedURL || doc.Path,
-            Type: SecurableObjectType.Document,
-            SharedBy: sharedBy,
-            SharedWith: sharedWith,
-            CrawlTime: doc.CrawlTime,
+            title: { data: doc.Filename, displayValue: doc.Filename},
+            fileExtension: { data: doc.FileExtension, displayValue: doc.FileExtension},
+            lastModifiedTime: { data: lastModifedTime, displayValue: this.toColloquialDateString(lastModifedTime)},
+            siteID: { data: doc.SiteID, displayValue: doc.SiteID},
+            siteTitle: { data: doc.SiteTitle, displayValue: doc.SiteTitle},
+            url: { data: doc.ServerRedirectedURL || doc.Path, displayValue: doc.ServerRedirectedURL || doc.Path},
+            type: { data: SecurableObjectType.Document, displayValue: "Document"},
+            sharedBy: { data: sharedBy, displayValue: sharedBy.join(", ")},
+            sharedWith: { data: sharedWith, displayValue: sharedWith.join(", ")},
+            crawlTime: { data: crawlTime, displayValue: this.toColloquialDateString(crawlTime)},
             key: doc.UniqueID || doc.Path
           });
         });
+
       } catch (e) {
         // TODO: log something?
         shouldShowMessage = true;
@@ -192,5 +218,38 @@ export default class ExtContentFetcher implements ISecurableObjectStore {
       mode: this.props.mode,
       scope: this.props.scope
     };
-  };
+  }
+
+  private toShortDateString (date: Date): string {
+      // e.g. 18 aug 2015
+      //const ds = date.format("ddd, dd MMM yyyy");
+      const ds: string = date.toDateString();
+      return ds;
+  }
+
+  private toColloquialDateString (then: Date): string {
+        let returnString: string = this.toShortDateString(then);
+        const now: Date = new Date();
+        const minsInHr: number = 60;
+
+        const isSameDay: boolean = then.getFullYear() === now.getFullYear() && then.getMonth() === now.getMonth() && then.getDate() === now.getDate();
+        if (isSameDay) {
+            if (now > then) {
+                const totalMinutesAgo: number = (now.getHours() * minsInHr) + now.getMinutes() - (then.getHours() * minsInHr) - then.getMinutes();
+                const hoursAgo: number = Math.floor(totalMinutesAgo / minsInHr);
+                const minsAgo: number = totalMinutesAgo % minsInHr;
+
+                if (hoursAgo < 1) {
+                    returnString = "" + minsAgo + " minutes ago";
+                }
+                if (hoursAgo === 1) {
+                    returnString = "" + hoursAgo + " hour and " + minsAgo + " minutes ago";
+                }
+                else {
+                    returnString = "" + hoursAgo + " hours and " + minsAgo + " minutes ago";
+                }
+            }
+        }
+        return returnString;
+    };
 }
