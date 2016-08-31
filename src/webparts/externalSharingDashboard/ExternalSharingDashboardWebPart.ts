@@ -73,7 +73,8 @@ export default class ExternalSharingDashboardWebPart extends BaseClientSideWebPa
     if (this.properties.displayType === DisplayType.Table) {
       element = React.createElement(ExternalSharingDashboard, {
         store: extContentStore,
-        contentProps: contentFecherProps
+        mode: contentFecherProps.mode,
+        scope: contentFecherProps.scope
       });
     }
     else {

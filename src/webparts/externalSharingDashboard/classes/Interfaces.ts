@@ -66,12 +66,20 @@ export interface IExternalSharingDashboardWebPartProps {
 
 export interface IExternalSharingDashboardProps {
   store: ISecurableObjectStore;
-  contentProps: IExtContentFetcherProps;
+  scope: SPScope;
+  mode: Mode;
 }
 
-// export interface ITableProps {
-//   items: ISecurableObject[];
-// }
+export interface IChart {
+  columns: ITableRow;
+  rows: ITableRow[];
+  columnIndexToGroupUpon: number;
+}
+
+export interface IChartItem {
+  label: string;
+  value: number;
+}
 
 export interface ITable {
   columns: ITableRow;

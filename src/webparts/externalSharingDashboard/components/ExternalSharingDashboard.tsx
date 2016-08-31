@@ -23,6 +23,7 @@ import {
   Label
 } from "office-ui-fabric-react";
 
+import ChartistPie from "./ChartistPie";
 import Table from "./Table";
 
 interface ITableProps {
@@ -67,8 +68,8 @@ export default class ExternalSharingDashboard extends React.Component<IExternalS
 
   public shouldComponentUpdate(nextProps: IExternalSharingDashboardProps): boolean {
     this.log.logInfo("shouldComponentUpdate");
-    return !this.state || nextProps.contentProps.mode !== this.state.mode
-      || nextProps.contentProps.scope !== this.state.scope;
+    return !this.state || nextProps.mode !== this.state.mode
+      || nextProps.scope !== this.state.scope;
   }
 
   public componentDidUpdate(): void {
@@ -143,12 +144,20 @@ export default class ExternalSharingDashboard extends React.Component<IExternalS
         rows.push(newRow);
       });
 
+      // return (
+      //   <div>
+      //     {headerControls}
+      //     <Table columns={{cells:columns, key:"headerRow" }} rows={rows} pageSize={10} pageStartIndex={0} currentSort={-1} currentSortDescending={true} />
+      //   </div>
+      // );
+
       return (
         <div>
           {headerControls}
-          <Table columns={{cells:columns, key:"headerRow" }} rows={rows} pageSize={10} pageStartIndex={0} currentSort={-1} currentSortDescending={true} />
+          <ChartistPie columns={{cells:columns, key:"headerRow" }} rows={rows} columnIndexToGroupUpon={3} />
         </div>
       );
+
     }
     else if (this.state && this.state.controlMode) {
       this.log.logError(`ControlMode is not supported ${this.state.controlMode}`);
