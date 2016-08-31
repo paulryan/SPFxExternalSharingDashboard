@@ -18,7 +18,13 @@ export function GetDisplayTermForEnumMode(mode: Mode): string {
     displayName = "All externally shared documents";
   }
   else if (mode === Mode.MyExtSharedDocuments) {
-    displayName = "Documents which I have created, modified, or shared externally";
+    displayName = "Externally shared documents which I have created, modified, or shared";
+  }
+  else if (mode === Mode.AllDocuments) {
+    displayName = "All documents";
+  }
+  else if (mode === Mode.MyDocuments) {
+    displayName = "Documents which I have created or modfied";
   }
   return displayName;
 }
@@ -34,11 +40,13 @@ export enum Mode {
   MyExtSharedDocuments = 2,
   // AllExtSharedContainers = 3,
   // MyExtSharedContainers = 4,
+  AllDocuments = 5,
+  MyDocuments = 6
 }
 
 export enum DisplayType {
   Table = 1,
-  Tree = 2,
+//  Tree = 2,
   BySite = 3,
   ByUser = 4,
   OverTime = 5

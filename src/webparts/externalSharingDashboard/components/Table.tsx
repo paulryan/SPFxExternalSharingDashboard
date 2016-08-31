@@ -13,7 +13,7 @@ import {
   css
 } from "office-ui-fabric-react";
 
-import styles from "../ExternalSharingDashboard.module.scss";
+import styles from "../DocumentDashboard.module.scss";
 
 export default class Table extends React.Component<ITable, ITable> {
   private static tableClasses: string = css("ms-Table");

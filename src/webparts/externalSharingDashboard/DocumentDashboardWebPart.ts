@@ -12,12 +12,11 @@ import {
   PropertyPaneTextField
 } from "@microsoft/sp-client-preview";
 
+import * as strings from "mystrings";
 import * as React from "react";
 import * as ReactDom from "react-dom";
 
-import * as strings from "mystrings";
-
-import ExternalSharingDashboard from "./components/ExternalSharingDashboard";
+import DocumentDashboard from "./components/DocumentDashboard";
 
 import {
   DisplayType,
@@ -28,34 +27,35 @@ import {
 } from "./classes/Enums";
 
 import {
-  IExtContentFetcherProps,
-  IExternalSharingDashboardProps,
-  IExternalSharingDashboardWebPartProps,
+  IContentFetcherProps,
+  IDocumentDashboardProps,
+  IDocumentDashboardWebPartProps,
   ISecurableObjectStore
 } from "./classes/Interfaces";
 
-import ExtContentFetcher from "./classes/ExtContentFetcher";
+import ContentFetcher from "./classes/ContentFetcher";
 import MockContentFetcher from "./tests/MockContentFetcher";
 
 import {
   Logger
 } from "./classes/Logger";
 
-export default class ExternalSharingDashboardWebPart extends BaseClientSideWebPart<IExternalSharingDashboardWebPartProps> {
+export default class DocumentDashboardWebPart extends BaseClientSideWebPart<IDocumentDashboardWebPartProps> {
   private log: Logger;
 
   public constructor(context: IWebPartContext) {
     super(context);
-    this.log = new Logger("ExternalSharingDashboardWebPart");
+    this.log = new Logger("DocumentDashboardWebPart");
   }
 
   public render(): void {
     // Define properties for the Content Fetcher
-    const contentFecherProps: IExtContentFetcherProps = {
+    const contentFecherProps: IContentFetcherProps = {
       context: this.context,
       scope: this.properties.scope,
       mode: this.properties.mode,
-      managedProperyName: this.properties.managedPropertyName,
+      managedProperyName: this.properties.sharedWithManagedPropertyName,
+      crawlTimeManagedPropertyName: this.properties.crawlTimeManagedPropertyName,
       noResultsString: this.properties.noResultsString
     };
 
@@ -65,22 +65,16 @@ export default class ExternalSharingDashboardWebPart extends BaseClientSideWebPa
       extContentStore = new MockContentFetcher(contentFecherProps);
     }
     else {
-      extContentStore = new ExtContentFetcher(contentFecherProps);
+      extContentStore = new ContentFetcher(contentFecherProps);
     }
 
-    // Create appropriate ReactElement for displaying content
-    let element: React.ReactElement<IExternalSharingDashboardProps> = null;
-    if (this.properties.displayType === DisplayType.Table) {
-      element = React.createElement(ExternalSharingDashboard, {
-        store: extContentStore,
-        mode: contentFecherProps.mode,
-        scope: contentFecherProps.scope
-      });
-    }
-    else {
-      this.log.logError("Unsupported display type: " + this.properties.displayType);
-      return null;
-    }
+    // Create manager ReactElement
+    const element: React.ReactElement<IDocumentDashboardProps> = React.createElement(DocumentDashboard, {
+      store: extContentStore,
+      mode: this.properties.mode,
+      scope: this.properties.scope,
+      displayType: this.properties.displayType
+    });
 
     // Build the control!
     ReactDom.render(element, this.domElement);
@@ -98,7 +92,7 @@ export default class ExternalSharingDashboardWebPart extends BaseClientSideWebPa
               groupName: "Core",
               groupFields: [
                 PropertyPaneDropdown("scope", {
-                  label: "Where should we look for externally shared content?",
+                  label: "Where should we look for content?",
                   options: [
                     { key: SPScope.Tenant, text: GetDisplayTermForEnumSPScope(SPScope.Tenant) },
                     { key: SPScope.SiteCollection, text: GetDisplayTermForEnumSPScope(SPScope.SiteCollection) },
@@ -109,7 +103,9 @@ export default class ExternalSharingDashboardWebPart extends BaseClientSideWebPa
                   label: "What type content do you want to see?",
                   options: [
                     { key: Mode.AllExtSharedDocuments, text: GetDisplayTermForEnumMode(Mode.AllExtSharedDocuments) },
-                    { key: Mode.MyExtSharedDocuments, text: GetDisplayTermForEnumMode(Mode.MyExtSharedDocuments) }
+                    { key: Mode.MyExtSharedDocuments, text: GetDisplayTermForEnumMode(Mode.MyExtSharedDocuments) },
+                    { key: Mode.AllDocuments, text: GetDisplayTermForEnumMode(Mode.AllDocuments) },
+                    { key: Mode.MyDocuments, text: GetDisplayTermForEnumMode(Mode.MyDocuments) }
                     // { key: Mode.AllExtSharedContainers, text: "All externally shared sites, libraries, and folders" },
                     // { key: Mode.MyExtSharedContainers, text: "Sites, libraries, and folders which I have shared externally" }
                   ]
@@ -118,7 +114,7 @@ export default class ExternalSharingDashboardWebPart extends BaseClientSideWebPa
                   label: "How do you want the results rendered?",
                   options: [
                     { key: DisplayType.Table, text: "As a table" },
-                    { key: DisplayType.Tree, text: "Hierarchically" },
+                   // { key: DisplayType.Tree, text: "Hierarchically" },
                     { key: DisplayType.BySite, text: "Charted by site" },
                     { key: DisplayType.ByUser, text: "Charted by user" },
                     { key: DisplayType.OverTime, text: "Charted over time" }
@@ -132,7 +128,7 @@ export default class ExternalSharingDashboardWebPart extends BaseClientSideWebPa
                 PropertyPaneTextField("noResultsString", {
                   label: "What message should we display when there are no results?"
                 }),
-                PropertyPaneTextField("managedPropertyName", {
+                PropertyPaneTextField("sharedWithManagedPropertyName", {
                   label: "What is the name of the queryable Managed Property containing shared with details?",
                   description: `This property must be configured as such:
                                 Text, Multi, Queryable, Retrievable, and be mapped to 'ows_SharedWithDetails'`

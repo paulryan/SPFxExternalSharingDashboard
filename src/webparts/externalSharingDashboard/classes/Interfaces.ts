@@ -10,32 +10,44 @@ import {
   SecurableObjectType
 } from "./Enums";
 
-export interface IExtContentFetcherProps {
+export interface IContentFetcherProps {
   context: IWebPartContext;
   scope: SPScope;
   mode: Mode;
   managedProperyName: string;
+  crawlTimeManagedPropertyName: string;
   noResultsString: string;
 }
 
-export interface IGetExtContentFuncResponse {
-  extContent: ISecurableObject[];
-  controlMode: ControlMode;
+export interface IGetContentFuncResponse {
+  results: ISecurableObject[];
   message: string;
+  isError: boolean;
+}
+
+export interface IDocumentDashboardProps {
+  store: ISecurableObjectStore;
   scope: SPScope;
   mode: Mode;
+  displayType: DisplayType;
+}
+
+export interface IDocumentDashboardState {
+  results: ISecurableObject[];
+  message: string;
+  controlMode: ControlMode;
+  scope: SPScope;
+  mode: Mode;
+  displayType: DisplayType;
 }
 
 export interface ISecurableObject {
-  // That match managed property names
   title: ISecurableObjectProperty<string>;
   fileExtension: ISecurableObjectProperty<string>;
   lastModifiedTime: ISecurableObjectProperty<Date>;
   siteTitle: ISecurableObjectProperty<string>;
   siteID: ISecurableObjectProperty<string>;
   crawlTime: ISecurableObjectProperty<Date>;
-
-  // That require mapping/transforming from managed property
   url: ISecurableObjectProperty<string>;
   type: ISecurableObjectProperty<SecurableObjectType>;
   sharedWith: ISecurableObjectProperty<string[]>;
@@ -48,31 +60,34 @@ export interface ISecurableObjectProperty<Type> {
   displayValue: string;
 }
 
-export interface IGetExtContentFunc {
-    (): Promise<IGetExtContentFuncResponse>;
+export interface IGetContentFunc {
+    (): Promise<IGetContentFuncResponse>;
 }
 
 export interface ISecurableObjectStore {
-  getExternalContent: IGetExtContentFunc;
+  getContent: IGetContentFunc;
 }
 
-export interface IExternalSharingDashboardWebPartProps {
+export interface IDocumentDashboardWebPartProps {
   scope: SPScope;
   mode: Mode;
   displayType: DisplayType;
   noResultsString: string;
-  managedPropertyName: string;
+  sharedWithManagedPropertyName: string;
+  crawlTimeManagedPropertyName: string;
 }
 
-export interface IExternalSharingDashboardProps {
-  store: ISecurableObjectStore;
-  scope: SPScope;
-  mode: Mode;
+export interface ISearchResponse {
+  results: any[];
+  rowCount: number;
+  totalRows: number;
+  totalRowsIncludingDuplicates: number;
+  isSuccess: boolean;
+  message: string;
 }
 
 export interface IChart {
-  columns: ITableRow;
-  rows: ITableRow[];
+  items: IChartItem[];
   columnIndexToGroupUpon: number;
 }
 

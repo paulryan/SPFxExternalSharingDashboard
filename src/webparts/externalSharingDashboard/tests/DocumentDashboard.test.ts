@@ -1,6 +1,6 @@
 import * as assert from "assert";
 
-describe("ExternalSharingDashboardWebPart", () => {
+describe("DocumentDashboardWebPart", () => {
   it("should do something", () => {
     assert.ok(true);
   });

@@ -1,8 +1,8 @@
 {
   "entries": [
     {
-      "entry": "./lib/webparts/externalSharingDashboard/ExternalSharingDashboardWebPart.js",
-      "manifest": "./src/webparts/externalSharingDashboard/ExternalSharingDashboardWebPart.manifest.json",
+      "entry": "./lib/webparts/externalSharingDashboard/DocumentDashboardWebPart.js",
+      "manifest": "./src/webparts/externalSharingDashboard/DocumentDashboardWebPart.manifest.json",
       "outputPath": "./dist/external-sharing-dashboard.bundle.js"
     }
   ],

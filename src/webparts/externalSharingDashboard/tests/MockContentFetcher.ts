@@ -1,18 +1,17 @@
 import {
-  ControlMode,
   SecurableObjectType
 } from "../classes/Enums";
 
 import {
-  IExtContentFetcherProps,
-  IGetExtContentFuncResponse,
+  IContentFetcherProps,
+  IGetContentFuncResponse,
   ISecurableObject,
   ISecurableObjectStore
 } from "../classes/Interfaces";
 
 export default class MockContentFetcher implements ISecurableObjectStore {
 
-  public props: IExtContentFetcherProps;
+  public props: IContentFetcherProps;
 
   private content: ISecurableObject[] = [
     {
@@ -43,18 +42,16 @@ export default class MockContentFetcher implements ISecurableObjectStore {
     }
   ];
 
-  public constructor (props: IExtContentFetcherProps) {
+  public constructor (props: IContentFetcherProps) {
     this.props = props;
   }
 
-  public getExternalContent(): Promise<IGetExtContentFuncResponse> {
-    return new Promise<IGetExtContentFuncResponse>((resolve) => {
+  public getContent(): Promise<IGetContentFuncResponse> {
+    return new Promise<IGetContentFuncResponse>((resolve) => {
         resolve({
-          extContent: this.content,
-          controlMode: ControlMode.Content,
-          message: "Mocked documents",
-          mode: this.props.mode,
-          scope: this.props.scope
+          results: this.content,
+          isError: false,
+          message: "Mocked documents"
         });
     });
   }

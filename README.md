@@ -26,5 +26,5 @@ gulp watch - TODO
 gulp build - TODO
 gulp deploy - TODO
 =======
-# SPFxExternalSharingDashboard
+# DocumentDashboard
 >>>>>>> da3a437f340508ab869ac914f8bc3e201afd0578

@@ -9,15 +9,15 @@
   "preconfiguredEntries": [{
     "groupId": "1ce77f4e-747e-48c3-8984-09b3eef69b25",
     "group": { "default": "Security" },
-    "title": { "default": "Externally Shared Documents" },
-    "description": { "default": "Keep an eye on external users" },
-    "officeFabricIconFontName": "Share",
+    "title": { "default": "Document Dashboard" },
+    "description": { "default": "Quick document analytics" },
+    "officeFabricIconFontName": "Page",
     "properties": {
       "scope": 1,
       "mode": 1,
       "displayType": 1,
-      "noResultsString": "No externally shared content was found",
-      "managedPropertyName": "SharedWithDetailsQueryable",
+      "noResultsString": "No content was found",
+      "sharedWithManagedPropertyName": "SharedWithDetailsQueryable",
       "crawlTimeManagedPropertyName": "CrawlTime"
     }
   }]

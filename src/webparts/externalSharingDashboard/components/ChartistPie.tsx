@@ -1,7 +1,7 @@
 import * as Chartist from "chartist";
 import * as React from "react";
 
-import "../ExternalSharingDashboard.module.css";
+import "../DocumentDashboard.module.css";
 
 import {
   IChart,
@@ -10,7 +10,7 @@ import {
 
 export default class ChartistPie extends React.Component<IChart, IChart> {
 
-  private columnCount: number = 0;
+  //private columnCount: number = 0;
   private responsiveOptions: Chartist.IResponsiveOptionTuple<Chartist.IPieChartOptions>[] = [
     ["screen and (max-width: 1024px)", {
       labelOffset: 0,
@@ -25,12 +25,9 @@ export default class ChartistPie extends React.Component<IChart, IChart> {
 
   public componentWillMount(): void {
     // Calculate constants
-    if (this.props.rows.length > 0) {
-      this.columnCount = this.props.rows[0].cells.length;
-      if (this.props.columnIndexToGroupUpon >= 0 && this.props.columnIndexToGroupUpon < this.columnCount) {
-        // set state
-        this.setState(this.props);
-      }
+    if (this.props.items.length > 0) {
+      // set state
+      this.setState(this.props);
     }
   }
 
@@ -46,13 +43,13 @@ export default class ChartistPie extends React.Component<IChart, IChart> {
 
   private renderChart(): void {
     const currentState: IChart = this.state;
-    if (currentState && currentState.rows && currentState.columnIndexToGroupUpon) {
+    if (currentState && currentState.items) {
       // Create a object of chart items
       const chartItemLabels: string[] = [];
       const chartItemsDict: any = {};
 
-      currentState.rows.forEach(r => {
-        const d: string = r.cells[currentState.columnIndexToGroupUpon].displayData;
+      currentState.items.forEach(r => {
+        const d: string = r.label; //r.cells[currentState.columnIndexToGroupUpon].displayData;
         let chartItem: IChartItem = chartItemsDict[d];
         if (chartItem) {
           chartItem.value++;

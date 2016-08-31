@@ -1,0 +1,105 @@
+import {
+  ISearchResponse
+} from "./Interfaces";
+
+export function ToShortDateString (date: Date): string {
+  // e.g. 18 aug 2015
+  //const ds = date.format("ddd, dd MMM yyyy");
+  const ds: string = date.toDateString();
+  return ds;
+}
+
+export function ToColloquialDateString (then: Date): string {
+  let returnString: string = ToShortDateString(then);
+  const now: Date = new Date();
+  const minsInHr: number = 60;
+
+  const isSameDay: boolean = then.getFullYear() === now.getFullYear() && then.getMonth() === now.getMonth() && then.getDate() === now.getDate();
+  if (isSameDay) {
+      if (now > then) {
+          const totalMinutesAgo: number = (now.getHours() * minsInHr) + now.getMinutes() - (then.getHours() * minsInHr) - then.getMinutes();
+          const hoursAgo: number = Math.floor(totalMinutesAgo / minsInHr);
+          const minsAgo: number = totalMinutesAgo % minsInHr;
+
+          if (hoursAgo < 1) {
+              returnString = "" + minsAgo + " minutes ago";
+          }
+          if (hoursAgo === 1) {
+              returnString = "" + hoursAgo + " hour and " + minsAgo + " minutes ago";
+          }
+          else {
+              returnString = "" + hoursAgo + " hours and " + minsAgo + " minutes ago";
+          }
+      }
+  }
+  return returnString;
+}
+
+export function EnsureBracesOnGuidString(guidString: string): string {
+  if (guidString) {
+    guidString = "{" + guidString.trim().replace("{", "").replace("}", "") + "}";
+  }
+  return guidString;
+}
+
+export function ParseDisplayNameFromExtUserAccountName(extUserAccountName: string): string {
+  let extUserDisplayName: string = "";
+  if (extUserAccountName) {
+    // We want the bit betwee the last index of | and the first index of #
+    let startIndex: number = extUserAccountName.lastIndexOf("|");
+    if (startIndex < 0) {
+      startIndex = 0;
+    }
+    else {
+      startIndex += "|".length;
+    }
+    let endIndex: number = extUserAccountName.indexOf("#", startIndex);
+    if (endIndex < 0) {
+      endIndex = extUserAccountName.length;
+    }
+    extUserDisplayName = extUserAccountName.substring(startIndex, endIndex);
+  }
+  return extUserDisplayName;
+}
+
+export function TransformSearchResponse(response: any): ISearchResponse {
+  // Simplify the data strucutre
+  const searchRowsSimplified: any[] = [];
+
+  let rowCount: number = 0;
+  let totalRows: number = 0;
+  let totalRowsIncludingDuplicates: number = 0;
+  let isSuccess: boolean = true;
+  let message: string = "";
+
+  if (response.PrimaryQueryResult && response.PrimaryQueryResult.RelevantResults) {
+    try {
+      const searchRows: any[] = response.PrimaryQueryResult.RelevantResults.Table.Rows;
+      searchRows.forEach((d: any) => {
+        const doc: any = {};
+        d.Cells.forEach((c: any) => {
+          doc[c.Key] = c.Value;
+        });
+        searchRowsSimplified.push(doc);
+      });
+      rowCount = response.PrimaryQueryResult.RelevantResults.RowCount;
+      totalRows = response.PrimaryQueryResult.RelevantResults.TotalRows;
+      totalRowsIncludingDuplicates = response.PrimaryQueryResult.RelevantResults.TotalRowsIncludingDuplicates;
+    } catch (e) {
+      isSuccess = false;
+      message = e.toString();
+    }
+  }
+  else {
+    message = "There are no RelevantResults";
+  }
+
+  return {
+    results: searchRowsSimplified,
+    rowCount: rowCount,
+    totalRows: totalRows,
+    totalRowsIncludingDuplicates: totalRowsIncludingDuplicates,
+    isSuccess: isSuccess,
+    message: message
+  };
+}
