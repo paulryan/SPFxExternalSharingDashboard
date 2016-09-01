@@ -45,28 +45,24 @@ export default class ChartistPie extends React.Component<IChart, IChart> {
     const currentState: IChart = this.state;
     if (currentState && currentState.items) {
       // Create a object of chart items
-      const chartItemLabels: string[] = [];
+      const chartItemDatas: string[] = [];
       const chartItemsDict: any = {};
 
-      currentState.items.forEach(r => {
-        const d: string = r.label; //r.cells[currentState.columnIndexToGroupUpon].displayData;
-        let chartItem: IChartItem = chartItemsDict[d];
-        if (chartItem) {
-          chartItem.value++;
+      currentState.items.forEach(dataPoint => {
+        const dataPointFromDict: IChartItem = chartItemsDict[dataPoint.data];
+        if (dataPointFromDict) {
+          dataPointFromDict.weight++;
         }
         else {
-          chartItem = {
-            label: d,
-            value: 1
-          };
-          chartItemsDict[d] = chartItem;
-          chartItemLabels.push(chartItem.label);
+          chartItemsDict[dataPoint.data] = dataPoint;
+          chartItemDatas.push(dataPoint.data);
         }
       });
 
-      const dataSeries: number[] = chartItemLabels.map<number>(l => (chartItemsDict[l] as IChartItem).value);
+      const labels: string[] = chartItemDatas.map<string>(data => (chartItemsDict[data] as IChartItem).label);
+      const dataSeries: number[] = chartItemDatas.map<number>(data => (chartItemsDict[data] as IChartItem).weight);
       const data: Chartist.IChartistData = {
-        labels: chartItemLabels,
+        labels: labels,
         series: dataSeries
       };
 

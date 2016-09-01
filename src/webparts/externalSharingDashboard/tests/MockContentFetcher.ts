@@ -25,6 +25,8 @@ export default class MockContentFetcher implements ISecurableObjectStore {
       siteID: { data: "1", displayValue: "1" },
       siteTitle: { data: "Team Site", displayValue: "Team Site" },
       crawlTime: { data: new Date(), displayValue: "Never" },
+      modifiedBy: { data: { accountName: "", preferredName: "Paul Ryan", email: "" }, displayValue: "Paul Ryan" },
+      createdBy: { data: { accountName: "", preferredName: "Chris O'Brien", email: "" }, displayValue: "Chris O'Brien" },
       key: "1"
     },
     {
@@ -38,6 +40,8 @@ export default class MockContentFetcher implements ISecurableObjectStore {
       siteID: { data: "1", displayValue: "1" },
       siteTitle: { data: "Team Site", displayValue: "Team Site" },
       crawlTime: { data: new Date(), displayValue: "Never" },
+      modifiedBy: { data: { accountName: "", preferredName: "Paul Ryan", email: "" }, displayValue: "Paul Ryan" },
+      createdBy: { data: { accountName: "", preferredName: "Chris O'Brien", email: "" }, displayValue: "Chris O'Brien" },
       key: "2"
     }
   ];

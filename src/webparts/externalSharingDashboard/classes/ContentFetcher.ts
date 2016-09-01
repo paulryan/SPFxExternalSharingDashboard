@@ -8,6 +8,7 @@ import {
 import {
   IContentFetcherProps,
   IGetContentFuncResponse,
+  IOwsUser,
   ISearchResponse,
   ISecurableObject,
   ISecurableObjectStore
@@ -16,6 +17,7 @@ import {
 import {
   EnsureBracesOnGuidString,
   ParseDisplayNameFromExtUserAccountName,
+  ParseOWSUSER,
   ToColloquialDateString,
   TransformSearchResponse
 } from "./Utilities";
@@ -42,26 +44,37 @@ export default class ContentFetcher implements ISecurableObjectStore {
     const baseUri: string = self.props.context.pageContext.web.absoluteUrl + "/_api/search/query";
 
     // "MY" should represent things I have created or edited or shared.
+    // TODO: Can we get Graphy in a meaningful way?
     const un: string = self.props.context.pageContext.user.loginName;
     const me: string = un.substring(0, un.indexOf("@")); // TODO: get the query working with @ symbol.. .replace("@", "%40");
-    let myFql: string = `(ModifiedBy:${me} OR CreatedBy:${me}`;
-    if (self.props.managedProperyName) {
-      myFql = `(ModifiedBy:${me} OR CreatedBy:${me} OR ${self.props.managedProperyName}:${me})`;
+    let myFql: string = `EditorOWSUSER:${me} OR AuthorOWSUSER:${me}`;
+    if (self.props.sharedWithManagedPropertyName) {
+      myFql += ` OR ${self.props.sharedWithManagedPropertyName}:${me}`;
     }
+    myFql = `(${myFql})`;
+
+    const documentsFql: string = "ContentClass:STS_ListItem_DocumentLibrary";
+    const extSharedFql: string = "ViewableByExternalUsers:1";
+    const anonSharedFql: string = "ViewableByAnonymousUsers:1";
 
     let modeFql: string = "";
-    if (self.props.mode === Mode.AllExtSharedDocuments) {
-      modeFql = "" + self.props.managedProperyName + ":ext";
-    }
-    else if (self.props.mode === Mode.MyExtSharedDocuments) {
-      modeFql = `${self.props.managedProperyName}:ext ${myFql}`;
-    }
-    else if (self.props.mode === Mode.AllDocuments) {
-      modeFql = "ContentClass:STS_ListItem";
+    if (self.props.mode === Mode.AllDocuments) {
+      modeFql = `${documentsFql}`;
     }
     else if (self.props.mode === Mode.MyDocuments) {
-      // TODO: Can we get Graphy in a meaningful way?
-      modeFql = `ContentClass:STS_ListItem ${myFql}`;
+      modeFql = `${myFql} ${documentsFql}`;
+    }
+    else if (self.props.mode === Mode.AllExtSharedDocuments) {
+      modeFql = `${extSharedFql}`;
+    }
+    else if (self.props.mode === Mode.MyExtSharedDocuments) {
+      modeFql = `${myFql} ${extSharedFql}`;
+    }
+    else if (self.props.mode === Mode.AllAnonSharedDocuments) {
+      modeFql = `${anonSharedFql}`;
+    }
+    else if (self.props.mode === Mode.MyAnonSharedDocuments) {
+      modeFql = `${myFql} ${anonSharedFql}`;
     }
     else {
       self.log.logError("Unsupported mode: " + self.props.mode);
@@ -83,7 +96,9 @@ export default class ContentFetcher implements ISecurableObjectStore {
       return null;
     }
 
-    const selectPropsArray: string[] = ["LastModifiedTime", "Title", "Filename", "ServerRedirectedURL", "Path", "FileExtension", "UniqueID", "SharedWithDetails", "SiteTitle", "SiteID"];
+    const selectPropsArray: string[] = ["LastModifiedTime", "Title", "Filename", "ServerRedirectedURL", "Path",
+                                        "FileExtension", "UniqueID", "SharedWithDetails", "SiteTitle", "SiteID",
+                                        "EditorOWSUSER", "AuthorOWSUSER"];
     if (this.props.crawlTimeManagedPropertyName) {
       selectPropsArray.push(this.props.crawlTimeManagedPropertyName);
     }
@@ -198,6 +213,10 @@ export default class ContentFetcher implements ISecurableObjectStore {
               isLastModifiedTimeInvalid = false;
             }
 
+            // Parse OWSUSER fields
+            const editor: IOwsUser = ParseOWSUSER(doc.EditorOWSUSER);
+            const author: IOwsUser = ParseOWSUSER(doc.AuthorOWSUSER);
+
             // Create ISecurableObject from search results
             securableObjects.push({
               title: { data: doc.Filename, displayValue: doc.Filename },
@@ -210,6 +229,8 @@ export default class ContentFetcher implements ISecurableObjectStore {
               sharedBy: { data: sharedBy, displayValue: sharedBy.join(", ") },
               sharedWith: { data: sharedWith, displayValue: sharedWith.join(", ") },
               crawlTime: { data: crawlTime, displayValue: isCrawlTimeInvalid ? "" : ToColloquialDateString(crawlTime) },
+              modifiedBy: { data: editor, displayValue: editor.preferredName },
+              createdBy: { data: author, displayValue: author.preferredName },
               key: doc.UniqueID || doc.Path
             });
           });

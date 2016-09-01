@@ -20,6 +20,10 @@ import {
 } from "../classes/Interfaces";
 
 import {
+  ToColloquialDateString
+} from "../classes/Utilities";
+
+import {
   Logger
 } from "../classes/Logger";
 
@@ -208,31 +212,65 @@ export default class DocumentDashboard extends React.Component<IDocumentDashboar
     });
   }
 
-  // columns={{cells:columns, key:"headerRow" }} rows={rows} columnIndexToGroupUpon={3}
   private getStateAsIChart(displayType: DisplayType): IChart {
     const dataPoints: IChartItem[] = [];
     this.state.results.forEach((securableObj) => {
       if (displayType === DisplayType.ByUser) {
+        // Get all users associated with item.
+        // Only count each user once per item.
+        let users: IChartItem[] = [];
+        // Modified by
+        users.push({
+            label: securableObj.modifiedBy.data.preferredName,
+            data: securableObj.modifiedBy.data.email,
+            weight: 1
+          });
+        // Created by
+        users.push({
+            label: securableObj.createdBy.data.preferredName,
+            data: securableObj.createdBy.data.email,
+            weight: 1
+          });
+        // Shared by
         securableObj.sharedBy.data.forEach((d) => {
-          dataPoints.push({
+          users.push({
             label: d,
-            value: 1
+            data: d,
+            weight: 1
+          });
+        });
+        // Shared with
+        securableObj.sharedWith.data.forEach((d) => {
+           users.push({
+            label: d,
+            data: d,
+            weight: 1
           });
         });
 
-        // Add data points for modified by
+        // Ensure unique values
+        const userData: string[] = users.map(u => u.data);
+        users = users.filter((user, index, self) => {
+          return userData.indexOf(user.data) === index;
+        });
+
+        // Add to data points array
+        dataPoints.push(...users);
       }
       else if (displayType === DisplayType.BySite) {
         dataPoints.push({
           label: securableObj.siteTitle.displayValue,
-          value: 1
+          data: securableObj.siteID.data,
+          weight: 1
         });
       }
       else if (displayType === DisplayType.OverTime) {
         if (securableObj.lastModifiedTime.data) {
+          const ticksToTheNearestHour: number = Math.round(securableObj.lastModifiedTime.data.getTime() / 1000 / 60 / 60);
           dataPoints.push({
-            label: securableObj.lastModifiedTime.displayValue,
-            value: 1
+            label: ToColloquialDateString(new Date(ticksToTheNearestHour)),
+            data: ticksToTheNearestHour.toString(), // to the hour
+            weight: 1
           });
         }
       }
@@ -249,6 +287,8 @@ export default class DocumentDashboard extends React.Component<IDocumentDashboar
     const columnWithHref: string = "title";
     const columns: ITableCell<string>[] = [
       { sortableData: "title", displayData: "Title", href: null, key: "headerCellTitle"},
+      { sortableData: "modifiedBy", displayData: "Modified By", href: null, key: "headerCellModifiedBy"},
+      { sortableData: "createdBy", displayData: "Created By", href: null, key: "headerCellCreatedBy"},
       { sortableData: "lastModifiedTime", displayData: "Modified", href: null, key: "headerCellModified"},
       { sortableData: "sharedWith", displayData: "Shared With", href: null, key: "headerCellSharedWith"},
       { sortableData: "sharedBy", displayData: "Shared By", href: null, key: "headerCellSharedBy"},

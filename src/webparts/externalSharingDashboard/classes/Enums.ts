@@ -14,17 +14,23 @@ export function GetDisplayTermForEnumSPScope(scope: SPScope): string {
 
 export function GetDisplayTermForEnumMode(mode: Mode): string {
   let displayName: string = "";
-  if (mode === Mode.AllExtSharedDocuments) {
-    displayName = "All externally shared documents";
-  }
-  else if (mode === Mode.MyExtSharedDocuments) {
-    displayName = "Externally shared documents which I have created, modified, or shared";
-  }
-  else if (mode === Mode.AllDocuments) {
+  if (mode === Mode.AllDocuments) {
     displayName = "All documents";
   }
   else if (mode === Mode.MyDocuments) {
-    displayName = "Documents which I have created or modfied";
+    displayName = "My documents"; //"Documents which I have created or modfied";
+  }
+  else if (mode === Mode.AllExtSharedDocuments) {
+    displayName = "All externally shared documents";
+  }
+  else if (mode === Mode.MyExtSharedDocuments) {
+    displayName = "My externally shared documents"; //"Externally shared documents which I have created, modified, or shared";
+  }
+  else if (mode === Mode.AllAnonSharedDocuments) {
+    displayName = "All anonymously shared documents";
+  }
+  else if (mode === Mode.MyAnonSharedDocuments) {
+    displayName = "My anonymously shared documents"; //"Anonymously shared documents which I have created, modified, or shared";
   }
   return displayName;
 }
@@ -36,20 +42,19 @@ export enum SPScope {
 }
 
 export enum Mode {
-  AllExtSharedDocuments = 1,
-  MyExtSharedDocuments = 2,
-  // AllExtSharedContainers = 3,
-  // MyExtSharedContainers = 4,
-  AllDocuments = 5,
-  MyDocuments = 6
+  AllDocuments = 1,
+  MyDocuments = 2,
+  AllExtSharedDocuments = 3,
+  MyExtSharedDocuments = 4,
+  AllAnonSharedDocuments = 5,
+  MyAnonSharedDocuments = 6
 }
 
 export enum DisplayType {
   Table = 1,
-//  Tree = 2,
-  BySite = 3,
-  ByUser = 4,
-  OverTime = 5
+  BySite = 2,
+  ByUser = 3,
+  OverTime = 4
 }
 
 export enum SecurableObjectType {

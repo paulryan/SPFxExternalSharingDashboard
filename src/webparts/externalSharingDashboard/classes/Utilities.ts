@@ -1,4 +1,5 @@
 import {
+  IOwsUser,
   ISearchResponse
 } from "./Interfaces";
 
@@ -102,4 +103,25 @@ export function TransformSearchResponse(response: any): ISearchResponse {
     isSuccess: isSuccess,
     message: message
   };
+}
+
+export function ParseOWSUSER(owsUserString: string): IOwsUser {
+  const user: IOwsUser = {
+    preferredName: "",
+    accountName: "",
+    email: ""
+  };
+  if (owsUserString) {
+    // | Paul Ryan | 693A30...36F6D i:0#.f|membership|paul.ryan@paulryan.onmicrosoft.com
+    const owsUserArraySplitBar: string[] = owsUserString.split("|");
+    if (owsUserArraySplitBar.length > 1) {
+      user.preferredName = owsUserArraySplitBar[1].trim();
+      user.email = owsUserArraySplitBar[owsUserArraySplitBar.length - 1].trim();
+    }
+    const owsUserArraySplitSpace: string[] = owsUserString.split(" ");
+    if (owsUserArraySplitSpace.length > 1) {
+      user.accountName = owsUserArraySplitSpace[owsUserArraySplitSpace.length - 1].trim();
+    }
+  }
+  return user;
 }

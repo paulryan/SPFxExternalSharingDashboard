@@ -14,7 +14,7 @@ export interface IContentFetcherProps {
   context: IWebPartContext;
   scope: SPScope;
   mode: Mode;
-  managedProperyName: string;
+  sharedWithManagedPropertyName: string;
   crawlTimeManagedPropertyName: string;
   noResultsString: string;
 }
@@ -52,6 +52,8 @@ export interface ISecurableObject {
   type: ISecurableObjectProperty<SecurableObjectType>;
   sharedWith: ISecurableObjectProperty<string[]>;
   sharedBy: ISecurableObjectProperty<string[]>;
+  modifiedBy: ISecurableObjectProperty<IOwsUser>;
+  createdBy: ISecurableObjectProperty<IOwsUser>;
   key: string;
 }
 
@@ -86,6 +88,12 @@ export interface ISearchResponse {
   message: string;
 }
 
+export interface IOwsUser {
+  preferredName: string;
+  accountName: string;
+  email: string;
+}
+
 export interface IChart {
   items: IChartItem[];
   columnIndexToGroupUpon: number;
@@ -93,7 +101,8 @@ export interface IChart {
 
 export interface IChartItem {
   label: string;
-  value: number;
+  data: string;
+  weight: number;
 }
 
 export interface ITable {

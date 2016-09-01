@@ -54,7 +54,7 @@ export default class DocumentDashboardWebPart extends BaseClientSideWebPart<IDoc
       context: this.context,
       scope: this.properties.scope,
       mode: this.properties.mode,
-      managedProperyName: this.properties.sharedWithManagedPropertyName,
+      sharedWithManagedPropertyName: this.properties.sharedWithManagedPropertyName,
       crawlTimeManagedPropertyName: this.properties.crawlTimeManagedPropertyName,
       noResultsString: this.properties.noResultsString
     };
@@ -91,23 +91,25 @@ export default class DocumentDashboardWebPart extends BaseClientSideWebPart<IDoc
             {
               groupName: "Core",
               groupFields: [
+                PropertyPaneDropdown("mode", {
+                  label: "What type content do you want to see?",
+                  options: [
+                    { key: Mode.AllDocuments, text: GetDisplayTermForEnumMode(Mode.AllDocuments) },
+                    { key: Mode.MyDocuments, text: GetDisplayTermForEnumMode(Mode.MyDocuments) },
+                    { key: Mode.AllExtSharedDocuments, text: GetDisplayTermForEnumMode(Mode.AllExtSharedDocuments) },
+                    { key: Mode.MyExtSharedDocuments, text: GetDisplayTermForEnumMode(Mode.MyExtSharedDocuments) },
+                    { key: Mode.AllAnonSharedDocuments, text: GetDisplayTermForEnumMode(Mode.AllAnonSharedDocuments) },
+                    { key: Mode.MyAnonSharedDocuments, text: GetDisplayTermForEnumMode(Mode.MyAnonSharedDocuments) }
+                    // { key: Mode.AllExtSharedContainers, text: "All externally shared sites, libraries, and folders" },
+                    // { key: Mode.MyExtSharedContainers, text: "Sites, libraries, and folders which I have shared externally" }
+                  ]
+                }),
                 PropertyPaneDropdown("scope", {
                   label: "Where should we look for content?",
                   options: [
                     { key: SPScope.Tenant, text: GetDisplayTermForEnumSPScope(SPScope.Tenant) },
                     { key: SPScope.SiteCollection, text: GetDisplayTermForEnumSPScope(SPScope.SiteCollection) },
                     { key: SPScope.Site, text: GetDisplayTermForEnumSPScope(SPScope.Site) }
-                  ]
-                }),
-                PropertyPaneDropdown("mode", {
-                  label: "What type content do you want to see?",
-                  options: [
-                    { key: Mode.AllExtSharedDocuments, text: GetDisplayTermForEnumMode(Mode.AllExtSharedDocuments) },
-                    { key: Mode.MyExtSharedDocuments, text: GetDisplayTermForEnumMode(Mode.MyExtSharedDocuments) },
-                    { key: Mode.AllDocuments, text: GetDisplayTermForEnumMode(Mode.AllDocuments) },
-                    { key: Mode.MyDocuments, text: GetDisplayTermForEnumMode(Mode.MyDocuments) }
-                    // { key: Mode.AllExtSharedContainers, text: "All externally shared sites, libraries, and folders" },
-                    // { key: Mode.MyExtSharedContainers, text: "Sites, libraries, and folders which I have shared externally" }
                   ]
                 }),
                 PropertyPaneDropdown("displayType", {
@@ -123,11 +125,16 @@ export default class DocumentDashboardWebPart extends BaseClientSideWebPart<IDoc
               ]
             },
             {
-              groupName: "Other",
+            groupName: "Other",
               groupFields: [
                 PropertyPaneTextField("noResultsString", {
                   label: "What message should we display when there are no results?"
-                }),
+                })
+              ]
+            },
+            {
+            groupName: "Search Schema",
+              groupFields: [
                 PropertyPaneTextField("sharedWithManagedPropertyName", {
                   label: "What is the name of the queryable Managed Property containing shared with details?",
                   description: `This property must be configured as such:
