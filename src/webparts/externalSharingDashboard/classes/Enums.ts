@@ -1,5 +1,5 @@
 export function GetDisplayTermForEnumSPScope(scope: SPScope): string {
-  let displayName: string = "";
+  let displayName: string = "Unsupported scope";
   if (scope === SPScope.Tenant) {
     displayName = "Anywhere in the entire tenancy";
   }
@@ -13,7 +13,7 @@ export function GetDisplayTermForEnumSPScope(scope: SPScope): string {
 }
 
 export function GetDisplayTermForEnumMode(mode: Mode): string {
-  let displayName: string = "";
+  let displayName: string = "Unsupported mode";
   if (mode === Mode.AllDocuments) {
     displayName = "All documents";
   }
@@ -31,6 +31,23 @@ export function GetDisplayTermForEnumMode(mode: Mode): string {
   }
   else if (mode === Mode.MyAnonSharedDocuments) {
     displayName = "My anonymously shared documents"; //"Anonymously shared documents which I have created, modified, or shared";
+  }
+  return displayName;
+}
+
+export function GetDisplayTermForEnumDisplayType(displayType: DisplayType): string {
+  let displayName: string = "Unsupported display type";
+  if (displayType === DisplayType.Table) {
+    displayName = "As a table";
+  }
+  else if (displayType === DisplayType.BySite) {
+    displayName = "As a chart, by site";
+  }
+  else if (displayType === DisplayType.ByUser) {
+    displayName = "As a chart, by user";
+  }
+  else if (displayType === DisplayType.OverTime) {
+    displayName = "As a chart, by last modified";
   }
   return displayName;
 }

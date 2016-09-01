@@ -3,6 +3,7 @@ import * as React from "react";
 import {
   ControlMode,
   DisplayType,
+  GetDisplayTermForEnumDisplayType,
   GetDisplayTermForEnumMode,
   GetDisplayTermForEnumSPScope
 } from "../classes/Enums";
@@ -20,7 +21,7 @@ import {
 } from "../classes/Interfaces";
 
 import {
-  ToColloquialDateString
+  ToVeryShortDateString
 } from "../classes/Utilities";
 
 import {
@@ -31,6 +32,8 @@ import {
   Label
 } from "office-ui-fabric-react";
 
+import ChartistBar from "./ChartistBar";
+// import ChartistLine from "./ChartistLine";
 import ChartistPie from "./ChartistPie";
 import Table from "./Table";
 
@@ -94,7 +97,7 @@ export default class DocumentDashboard extends React.Component<IDocumentDashboar
     const headerControls: JSX.Element = (
       <div>
         <div className="ms-font-xxl">Document Dashboard</div>
-        <div className="ms-font-l">{GetDisplayTermForEnumMode(this.state.mode) + " " + GetDisplayTermForEnumSPScope(this.state.scope).toLowerCase()}</div>
+        <div className="ms-font-l">{GetDisplayTermForEnumMode(this.state.mode) + " " + GetDisplayTermForEnumSPScope(this.state.scope).toLowerCase() }</div>
       </div>
     );
 
@@ -137,7 +140,10 @@ export default class DocumentDashboard extends React.Component<IDocumentDashboar
       else if (this.state.displayType === DisplayType.OverTime) {
         const params: IChart = this.getStateAsIChart(this.state.displayType);
         component = (
-          <ChartistPie {...params} />
+          <div>
+            <div className="ms-font-l">{GetDisplayTermForEnumDisplayType(this.state.displayType) }</div>
+            <ChartistBar {...params} />
+          </div>
         );
       }
       else {
@@ -177,17 +183,17 @@ export default class DocumentDashboard extends React.Component<IDocumentDashboar
       this.isUpdateStateInProgress = true;
       if (this.shouldFetchContent()) {
         this.props.store.getContent()
-        .then((r) => {
-          const controlMode: ControlMode = r.isError || r.results.length < 1 ? ControlMode.Message : ControlMode.Content;
-          this.setStateWrapper(r.results, controlMode, r.message);
-          this.hasContentBeenFetched = true;
-          this.isUpdateStateInProgress = false;
-        })
-        .catch((e) => {
-          this.log.logError("Failed to get content", e.message ? e.message : e.toString());
-          this.setStateWrapper(this.state.results, ControlMode.Message, "Failed to get content");
-          this.isUpdateStateInProgress = false;
-        });
+          .then((r) => {
+            const controlMode: ControlMode = r.isError || r.results.length < 1 ? ControlMode.Message : ControlMode.Content;
+            this.setStateWrapper(r.results, controlMode, r.message);
+            this.hasContentBeenFetched = true;
+            this.isUpdateStateInProgress = false;
+          })
+          .catch((e) => {
+            this.log.logError("Failed to get content", e.message ? e.message : e.toString());
+            this.setStateWrapper(this.state.results, ControlMode.Message, "Failed to get content");
+            this.isUpdateStateInProgress = false;
+          });
       }
       else {
         this.log.logInfo("New content has not been fetched as only the display mode has changed");
@@ -221,16 +227,16 @@ export default class DocumentDashboard extends React.Component<IDocumentDashboar
         let users: IChartItem[] = [];
         // Modified by
         users.push({
-            label: securableObj.modifiedBy.data.preferredName,
-            data: securableObj.modifiedBy.data.email,
-            weight: 1
-          });
+          label: securableObj.modifiedBy.data.preferredName,
+          data: securableObj.modifiedBy.data.email,
+          weight: 1
+        });
         // Created by
         users.push({
-            label: securableObj.createdBy.data.preferredName,
-            data: securableObj.createdBy.data.email,
-            weight: 1
-          });
+          label: securableObj.createdBy.data.preferredName,
+          data: securableObj.createdBy.data.email,
+          weight: 1
+        });
         // Shared by
         securableObj.sharedBy.data.forEach((d) => {
           users.push({
@@ -241,7 +247,7 @@ export default class DocumentDashboard extends React.Component<IDocumentDashboar
         });
         // Shared with
         securableObj.sharedWith.data.forEach((d) => {
-           users.push({
+          users.push({
             label: d,
             data: d,
             weight: 1
@@ -266,15 +272,19 @@ export default class DocumentDashboard extends React.Component<IDocumentDashboar
       }
       else if (displayType === DisplayType.OverTime) {
         if (securableObj.lastModifiedTime.data) {
-          const ticksToTheNearestHour: number = Math.round(securableObj.lastModifiedTime.data.getTime() / 1000 / 60 / 60);
+          const d: Date = securableObj.lastModifiedTime.data;
+          const roundedDate: Date = new Date(d.getFullYear(), d.getMonth(), d.getDate());
           dataPoints.push({
-            label: ToColloquialDateString(new Date(ticksToTheNearestHour)),
-            data: ticksToTheNearestHour.toString(), // to the hour
+            label: ToVeryShortDateString(roundedDate),
+            data: roundedDate.getTime().toString(),
             weight: 1
           });
         }
       }
     });
+
+    // TODO: Add items with weight 0 for every missing day?
+
     return {
       items: dataPoints,
       columnIndexToGroupUpon: 0 // As there is only a single column in the data we return
@@ -286,19 +296,19 @@ export default class DocumentDashboard extends React.Component<IDocumentDashboar
     // upfront - only the current page should be processed?
     const columnWithHref: string = "title";
     const columns: ITableCell<string>[] = [
-      { sortableData: "title", displayData: "Title", href: null, key: "headerCellTitle"},
-      { sortableData: "modifiedBy", displayData: "Modified By", href: null, key: "headerCellModifiedBy"},
-      { sortableData: "createdBy", displayData: "Created By", href: null, key: "headerCellCreatedBy"},
-      { sortableData: "lastModifiedTime", displayData: "Modified", href: null, key: "headerCellModified"},
-      { sortableData: "sharedWith", displayData: "Shared With", href: null, key: "headerCellSharedWith"},
-      { sortableData: "sharedBy", displayData: "Shared By", href: null, key: "headerCellSharedBy"},
-      { sortableData: "siteTitle", displayData: "Site Title", href: null, key: "headerCellSiteTitle"},
-      { sortableData: "crawlTime", displayData: "Accurate as of", href: null, key: "headerCellCrawlTime"}
+      { sortableData: "title", displayData: "Title", href: null, key: "headerCellTitle" },
+      { sortableData: "modifiedBy", displayData: "Modified By", href: null, key: "headerCellModifiedBy" },
+      { sortableData: "createdBy", displayData: "Created By", href: null, key: "headerCellCreatedBy" },
+      { sortableData: "lastModifiedTime", displayData: "Modified", href: null, key: "headerCellModified" },
+      { sortableData: "sharedWith", displayData: "Shared With", href: null, key: "headerCellSharedWith" },
+      { sortableData: "sharedBy", displayData: "Shared By", href: null, key: "headerCellSharedBy" },
+      { sortableData: "siteTitle", displayData: "Site Title", href: null, key: "headerCellSiteTitle" },
+      { sortableData: "crawlTime", displayData: "Accurate as of", href: null, key: "headerCellCrawlTime" }
     ];
 
     const rows: ITableRow[] = [];
     this.state.results.forEach((securableObj) => {
-      const newRow: ITableRow = { cells: [], key: securableObj.key};
+      const newRow: ITableRow = { cells: [], key: securableObj.key };
       columns.forEach((columnName) => {
         const cellSortableData: ISecurableObjectProperty<any> = securableObj[columnName.sortableData];
         if (cellSortableData) {

@@ -4,9 +4,13 @@ import {
 } from "./Interfaces";
 
 export function ToShortDateString (date: Date): string {
-  // e.g. 18 aug 2015
-  //const ds = date.format("ddd, dd MMM yyyy");
-  const ds: string = date.toDateString();
+  return `${ToVeryShortDateString(date)} ${date.getFullYear()}`;
+}
+
+export function ToVeryShortDateString (date: Date): string {
+  // e.g. 18 Aug
+  const months: string[] = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec" ];
+  const ds: string = `${date.getDate()} ${months[date.getMonth()]}`;
   return ds;
 }
 

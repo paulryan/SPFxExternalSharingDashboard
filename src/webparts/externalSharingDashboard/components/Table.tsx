@@ -96,11 +96,11 @@ export default class Table extends React.Component<ITable, ITable> {
                 </tbody>
               </table>
               <div className={Table.tablePagerClasses}>
-                <a href="#prevPage" onClick={this.prevPage}>
+                <a href="#" onClick={this.prevPage}>
                   <i className="ms-Icon ms-Icon--triangleLeft" aria-action="Previous page of results"></i>
                 </a>
                 <span>{Math.round(this.state.pageStartIndex / this.state.pageSize) + 1} of {this.pageCount}</span>
-                <a href="#nextPage" onClick={this.nextPage}>
+                <a href="#" onClick={this.nextPage}>
                   <i className="ms-Icon ms-Icon--triangleRight" aria-action="Next page of results"></i>
                 </a>
               </div>

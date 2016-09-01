@@ -20,6 +20,7 @@ import DocumentDashboard from "./components/DocumentDashboard";
 
 import {
   DisplayType,
+  GetDisplayTermForEnumDisplayType,
   GetDisplayTermForEnumMode,
   GetDisplayTermForEnumSPScope,
   Mode,
@@ -115,11 +116,10 @@ export default class DocumentDashboardWebPart extends BaseClientSideWebPart<IDoc
                 PropertyPaneDropdown("displayType", {
                   label: "How do you want the results rendered?",
                   options: [
-                    { key: DisplayType.Table, text: "As a table" },
-                   // { key: DisplayType.Tree, text: "Hierarchically" },
-                    { key: DisplayType.BySite, text: "Charted by site" },
-                    { key: DisplayType.ByUser, text: "Charted by user" },
-                    { key: DisplayType.OverTime, text: "Charted over time" }
+                    { key: DisplayType.Table, text: GetDisplayTermForEnumDisplayType(DisplayType.Table) },
+                    { key: DisplayType.BySite, text: GetDisplayTermForEnumDisplayType(DisplayType.BySite) },
+                    { key: DisplayType.ByUser, text: GetDisplayTermForEnumDisplayType(DisplayType.ByUser) },
+                    { key: DisplayType.OverTime, text: GetDisplayTermForEnumDisplayType(DisplayType.OverTime) }
                   ]
                 })
               ]
