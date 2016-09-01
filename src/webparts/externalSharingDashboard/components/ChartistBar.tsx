@@ -10,7 +10,7 @@ export default class ChartistBar extends ChartistBase {
 
   public renderChart(): void {
 
-    const data: Chartist.IChartistData = this.getChartistData();
+    const data: Chartist.IChartistData = this.getChartistData(this.props.maxGroups);
 
     const options: Chartist.IBarChartOptions = {
       axisY: {
@@ -18,9 +18,9 @@ export default class ChartistBar extends ChartistBase {
       },
       chartPadding: {
         top: 30,
-        right: 30,
+        right: 5,
         bottom: 30,
-        left: 30
+        left: 5
       }
     };
 

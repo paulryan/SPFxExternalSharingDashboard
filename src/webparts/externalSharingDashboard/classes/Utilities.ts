@@ -3,6 +3,10 @@ import {
   ISearchResponse
 } from "./Interfaces";
 
+export function GetDateFqlString (date: Date): string {
+  return `${date.getFullYear()}-${date.getMonth() + 1}-${date.getDate()}`; // 1900-01-01
+}
+
 export function ToShortDateString (date: Date): string {
   return `${ToVeryShortDateString(date)} ${date.getFullYear()}`;
 }

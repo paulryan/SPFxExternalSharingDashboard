@@ -28,10 +28,6 @@ import {
   Logger
 } from "../classes/Logger";
 
-import {
-  Label
-} from "office-ui-fabric-react";
-
 import ChartistBar from "./ChartistBar";
 // import ChartistLine from "./ChartistLine";
 import ChartistPie from "./ChartistPie";
@@ -97,34 +93,34 @@ export default class DocumentDashboard extends React.Component<IDocumentDashboar
     const headerControls: JSX.Element = (
       <div>
         <div className="ms-font-xxl">Document Dashboard</div>
-        <div className="ms-font-l">{GetDisplayTermForEnumMode(this.state.mode) + " " + GetDisplayTermForEnumSPScope(this.state.scope).toLowerCase() }</div>
+        <div className="ms-font-l">
+        {
+          GetDisplayTermForEnumMode(this.state.mode) + " "
+          + GetDisplayTermForEnumSPScope(this.state.scope).toLowerCase() + " "
+          + GetDisplayTermForEnumDisplayType(this.state.displayType).toLowerCase()
+        }
+        </div>
       </div>
     );
+
+    // Select the appropriate comnponent
+    let component: JSX.Element = null;
 
     // Render according to the control mode
     if (this.state && this.state.controlMode === ControlMode.Loading) {
       this.log.logInfo("render (Loading)");
-      return (
-        <div>
-          {headerControls}
-          <div className="ms-font-l">{this.state.message}</div>
-        </div>
+      component = (
+        <div className="ms-font-l">{this.state.message}</div>
       );
     }
     else if (this.state && this.state.controlMode === ControlMode.Message) {
       this.log.logInfo("render (Message)");
-      return (
-        <div>
-          {headerControls}
-          <Label>{this.state.message}</Label>
-        </div>
+      component = (
+        <div className="ms-font-l">{this.state.message}</div>
       );
     }
     else if (this.state && this.state.controlMode === ControlMode.Content) {
       this.log.logInfo("render (Content)");
-
-      // Select the appropriate comnponent
-      let component: JSX.Element = null;
       if (this.state.displayType === DisplayType.Table) {
         const params: ITable = this.getStateAsITable();
         component = (
@@ -132,44 +128,43 @@ export default class DocumentDashboard extends React.Component<IDocumentDashboar
         );
       }
       else if (this.state.displayType === DisplayType.BySite || this.state.displayType === DisplayType.ByUser) {
-        const params: IChart = this.getStateAsIChart(this.state.displayType);
+        const params: IChart = this.getStateAsIChart(this.state.displayType, this.props.limitPieChartSegments);
         component = (
           <ChartistPie {...params} />
         );
       }
       else if (this.state.displayType === DisplayType.OverTime) {
-        const params: IChart = this.getStateAsIChart(this.state.displayType);
+        const params: IChart = this.getStateAsIChart(this.state.displayType, this.props.limitBarChartBars);
         component = (
-          <div>
-            <div className="ms-font-l">{GetDisplayTermForEnumDisplayType(this.state.displayType) }</div>
-            <ChartistBar {...params} />
-          </div>
+          <ChartistBar {...params} />
         );
       }
       else {
         this.log.logError("Unsupported display type: " + this.state.displayType);
-        return null;
+        component = (
+          <div className="ms-font-l">Error: Unsupported display type</div>
+        );
       }
-
-      return (
-        <div>
-          {headerControls}
-          {component}
-        </div>
-      );
     }
     else if (this.state && this.state.controlMode) {
       this.log.logError(`ControlMode is not supported ${this.state.controlMode}`);
-      return (
-        <div className="ms-font-l">Error!</div>
+      component = (
+        <div className="ms-font-l">Error: Unsupported control mode</div>
       );
     }
     else {
       this.log.logError(`State is undefined`);
-      return (
-        <div className="ms-font-l">Error!</div>
+      component = (
+        <div className="ms-font-l">Error: State is undefined</div>
       );
     }
+
+    return (
+      <div>
+        {headerControls}
+        {component}
+      </div>
+    );
   }
 
   private shouldFetchContent(): boolean {
@@ -198,7 +193,13 @@ export default class DocumentDashboard extends React.Component<IDocumentDashboar
       else {
         this.log.logInfo("New content has not been fetched as only the display mode has changed");
         // This sets the mode, scope, display mode as per props without changing the data
-        this.setStateWrapper(this.state.results, ControlMode.Content, "Using cached content");
+        const noResults: boolean = this.state.results.length < 1;
+        if (noResults) {
+          this.setStateWrapper(this.state.results, ControlMode.Message, "No content was found");
+        }
+        else {
+          this.setStateWrapper(this.state.results, ControlMode.Content, "Using cached content");
+        }
         this.isUpdateStateInProgress = false;
       }
     }
@@ -215,10 +216,12 @@ export default class DocumentDashboard extends React.Component<IDocumentDashboar
       mode: this.props.mode,
       scope: this.props.scope,
       displayType: this.props.displayType
+      // limitPieChartSegments: this.props.limitPieChartSegments,
+      // limitBarChartBars: this.props.limitBarChartBars
     });
   }
 
-  private getStateAsIChart(displayType: DisplayType): IChart {
+  private getStateAsIChart(displayType: DisplayType, maxGroups: number): IChart {
     const dataPoints: IChartItem[] = [];
     this.state.results.forEach((securableObj) => {
       if (displayType === DisplayType.ByUser) {
@@ -287,6 +290,7 @@ export default class DocumentDashboard extends React.Component<IDocumentDashboar
 
     return {
       items: dataPoints,
+      maxGroups: maxGroups,
       columnIndexToGroupUpon: 0 // As there is only a single column in the data we return
     };
   }
@@ -297,14 +301,24 @@ export default class DocumentDashboard extends React.Component<IDocumentDashboar
     const columnWithHref: string = "title";
     const columns: ITableCell<string>[] = [
       { sortableData: "title", displayData: "Title", href: null, key: "headerCellTitle" },
-      { sortableData: "modifiedBy", displayData: "Modified By", href: null, key: "headerCellModifiedBy" },
-      { sortableData: "createdBy", displayData: "Created By", href: null, key: "headerCellCreatedBy" },
-      { sortableData: "lastModifiedTime", displayData: "Modified", href: null, key: "headerCellModified" },
-      { sortableData: "sharedWith", displayData: "Shared With", href: null, key: "headerCellSharedWith" },
-      { sortableData: "sharedBy", displayData: "Shared By", href: null, key: "headerCellSharedBy" },
-      { sortableData: "siteTitle", displayData: "Site Title", href: null, key: "headerCellSiteTitle" },
-      { sortableData: "crawlTime", displayData: "Accurate as of", href: null, key: "headerCellCrawlTime" }
+      { sortableData: "lastModifiedTime", displayData: "Last modified", href: null, key: "headerCellModified" }
     ];
+
+    // Select only the correct columns as configured
+    if (this.props.tableColumnsShowSiteTitle) {
+      columns.push({ sortableData: "siteTitle", displayData: "Site title", href: null, key: "headerCellSiteTitle" });
+    }
+    if (this.props.tableColumnsShowCreatedByModifiedBy) {
+      columns.push({ sortableData: "modifiedBy", displayData: "Modified by", href: null, key: "headerCellModifiedBy" });
+      columns.push({ sortableData: "createdBy", displayData: "Created by", href: null, key: "headerCellCreatedBy" });
+    }
+    if (this.props.tableColumnsShowSharedWith) {
+      columns.push({ sortableData: "sharedWith", displayData: "Shared With", href: null, key: "headerCellSharedWith" });
+      columns.push({ sortableData: "sharedBy", displayData: "Shared By", href: null, key: "headerCellSharedBy" });
+    }
+    if (this.props.tableColumnsShowCrawledTime) {
+      columns.push({ sortableData: "crawlTime", displayData: "Last crawled", href: null, key: "headerCellCrawlTime" });
+    }
 
     const rows: ITableRow[] = [];
     this.state.results.forEach((securableObj) => {

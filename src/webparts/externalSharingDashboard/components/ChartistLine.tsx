@@ -10,7 +10,7 @@ export default class ChartistLine extends ChartistBase {
 
   public renderChart(): void {
 
-    const data: Chartist.IChartistData = this.getChartistData();
+    const data: Chartist.IChartistData = this.getChartistData(this.props.maxGroups);
 
     // Add data points for every day between earliest and laters item
     // const newLabels: string[] = [];

@@ -32,6 +32,12 @@ export function GetDisplayTermForEnumMode(mode: Mode): string {
   else if (mode === Mode.MyAnonSharedDocuments) {
     displayName = "My anonymously shared documents"; //"Anonymously shared documents which I have created, modified, or shared";
   }
+  else if (mode === Mode.RecentlyModifiedDocuments) {
+    displayName = "Recently modified documents (<1 month)";
+  }
+  else if (mode === Mode.InactiveDocuments) {
+    displayName = "Inactive documents (>6 months)";
+  }
   return displayName;
 }
 
@@ -64,7 +70,9 @@ export enum Mode {
   AllExtSharedDocuments = 3,
   MyExtSharedDocuments = 4,
   AllAnonSharedDocuments = 5,
-  MyAnonSharedDocuments = 6
+  MyAnonSharedDocuments = 6,
+  RecentlyModifiedDocuments = 7,
+  InactiveDocuments = 8
 }
 
 export enum DisplayType {

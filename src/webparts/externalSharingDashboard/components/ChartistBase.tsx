@@ -13,14 +13,22 @@ export abstract class ChartistBase extends React.Component<IChart, IChart> {
   protected responsiveOptions: Chartist.IResponsiveOptionTuple<Chartist.IPieChartOptions>[] = [
     ["screen and (max-width: 1024px)", {
       labelOffset: 0,
-      chartPadding: 5
+      chartPadding: {
+        top: 30,
+        right: 5,
+        bottom: 30,
+        left: 5
+      }
     }]
   ];
 
   public render(): JSX.Element {
       return (
-        <div id="chartist" className="ct-chart ct-golden-section"></div>
+        <div id="chartist" className="ct-chart ct-perfect-fourth"></div>
       );
+      // ct-golden-section
+      // ct-perfect-fourth
+      // ct-major-twelfth
   }
 
   public componentDidMount(): void {
@@ -29,9 +37,9 @@ export abstract class ChartistBase extends React.Component<IChart, IChart> {
 
   public abstract renderChart(): void;
 
-  protected getChartistData(): Chartist.IChartistData {
+  protected getChartistData(maxGroups: number): Chartist.IChartistData {
     // Create a object of chart items
-    const chartItemDatas: string[] = [];
+    const chartItemDatas: IChartItem[] = [];
     const chartItemsDict: any = {};
 
     this.props.items.forEach(dataPoint => {
@@ -41,18 +49,39 @@ export abstract class ChartistBase extends React.Component<IChart, IChart> {
       }
       else {
         chartItemsDict[dataPoint.data] = dataPoint;
-        chartItemDatas.push(dataPoint.data);
+        chartItemDatas.push(dataPoint);
       }
     });
 
-    chartItemDatas.sort();
+    // Find the top (maxGroups - 1). Then add all other groups together as an 'other' group
+    let finalDataToChart: IChartItem[] = null;
+    if (maxGroups < chartItemDatas.length) {
+      chartItemDatas.sort((a, b) => b.weight - a.weight);
+      const sliceIndex: number = maxGroups > 2 ? maxGroups - 1 : 1;
+      const firstGroups: IChartItem[] = chartItemDatas.slice(0, sliceIndex);
+      const otherGroup: IChartItem = chartItemDatas.slice(sliceIndex).reduce((p, c) => { p.weight += c.weight; return p; });
+      otherGroup.label = "Other";
+      otherGroup.data = "";
+      firstGroups.push(otherGroup);
+      finalDataToChart = firstGroups;
+    }
+    else {
+      finalDataToChart = chartItemDatas;
+    }
 
-    const labels: string[] = chartItemDatas.map<string>(data => (chartItemsDict[data] as IChartItem).label);
-    const dataSeries: number[] = chartItemDatas.map<number>(data => (chartItemsDict[data] as IChartItem).weight);
+    // Sort on data to support timeline charts
+    finalDataToChart.sort((a, b) => a.data.localeCompare(b.data));
+
     const data: Chartist.IChartistData = {
-      labels: labels,
-      series: dataSeries
+      labels: [],
+      series: []
     };
+
+    finalDataToChart.forEach(d => {
+      (data.labels as string[]).push(d.label);
+      (data.series as number[]).push(d.weight);
+    });
+
     return data;
   }
 

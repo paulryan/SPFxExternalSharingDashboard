@@ -3,6 +3,7 @@ import * as React from "react";
 import {
   ITable,
   ITableCell,
+  ITableCellHeader,
   ITableRow
 } from "../classes/Interfaces";
 
@@ -17,10 +18,10 @@ import styles from "../DocumentDashboard.module.scss";
 
 export default class Table extends React.Component<ITable, ITable> {
   private static tableClasses: string = css("ms-Table");
-  private static tableHeadClasses: string = css("ms-bgColor-neutralLight");
   private static tableBodyClasses: string = css("ms-bgColor-white");
   private static tableRowClasses: string = css("ms-Table-row");
-  private static tablePagerClasses: string = css(styles.msTablePager, "ms-font-l");
+  private static tablePagerWrapperClasses: string = css(styles.msTablePagerWrapper);
+  private static tablePagerClasses: string = css(styles.msTablePager, "ms-font-xl");
 
   private maxPageStartIndex: number = 0;
   private minPageStartIndex: number = 0;
@@ -72,16 +73,24 @@ export default class Table extends React.Component<ITable, ITable> {
           isInnerZoneKeystroke={ (ev: KeyboardEvent) => ev.which === KeyCodes.right }>
             <div className={styles.msTableOverflow}>
               <table className={Table.tableClasses}>
-                <thead className={Table.tableHeadClasses}>
+                <tbody className={Table.tableBodyClasses}>
                   <tr className={Table.tableRowClasses}>
                     {this.state.columns.cells.map((c, i) => {
+                        const hc: ITableCellHeader = {
+                          sortableData: c.sortableData,
+                          displayData: c.displayData,
+                          href: c.href,
+                          key: c.key,
+                          onClick: (): void => { this.sortOnColumn(i); },
+                          isSorted: this.state.currentSort === i,
+                          sortDirDesc: this.state.currentSortDescending
+                        };
                         return (
-                          <TableCell {...c} onClick={() => this.sortOnColumn(i)} />
+                          <TableCellHeader {...hc} />
                         );
                       })}
                   </tr>
-                </thead>
-                <tbody className={Table.tableBodyClasses}>
+
                     {this.state.rows.slice(this.state.pageStartIndex, this.state.pageStartIndex + this.state.pageSize).map(r => {
                       return (
                         <tr key={r.key} className={Table.tableRowClasses}>
@@ -95,12 +104,12 @@ export default class Table extends React.Component<ITable, ITable> {
                     })}
                 </tbody>
               </table>
-              <div className={Table.tablePagerClasses}>
-                <a href="#" onClick={this.prevPage}>
+              <div className={Table.tablePagerWrapperClasses}>
+                <a href="#" onClick={this.prevPage} className={Table.tablePagerClasses}>
                   <i className="ms-Icon ms-Icon--triangleLeft" aria-action="Previous page of results"></i>
                 </a>
                 <span>{Math.round(this.state.pageStartIndex / this.state.pageSize) + 1} of {this.pageCount}</span>
-                <a href="#" onClick={this.nextPage}>
+                <a href="#" onClick={this.nextPage} className={Table.tablePagerClasses}>
                   <i className="ms-Icon ms-Icon--triangleRight" aria-action="Next page of results"></i>
                 </a>
               </div>
@@ -132,6 +141,7 @@ export default class Table extends React.Component<ITable, ITable> {
 
   private sortOnColumn (columnIndex: number): void {
       if (columnIndex >= 0 && columnIndex < this.columnCount) {
+
         // if the column is already sorted, sort in opposite direction, else sort in constant direction
         this.state.currentSortDescending = this.state.currentSort === columnIndex ? !this.state.currentSortDescending : false;
         this.state.currentSort = columnIndex;
@@ -160,24 +170,68 @@ export default class Table extends React.Component<ITable, ITable> {
     const cellDataB: any = cellB.sortableData;
 
     let compareValue: number = 0;
-    if (typeof cellDataA === "string" && typeof cellDataB === "string") {
-      compareValue = cellDataA.localeCompare(cellDataB);
+    if (cellDataA && cellDataB) {
+      if (typeof cellDataA === "string" && typeof cellDataB === "string") {
+        compareValue = cellDataA.localeCompare(cellDataB);
+      }
+      else if (cellDataA instanceof Date && cellDataB instanceof Date) {
+        compareValue = (cellDataA > cellDataB) ? 1
+                        : (cellDataA < cellDataB) ? -1 : 0;
+      }
+      else if (cellDataA instanceof Array && cellDataB instanceof Array) {
+        // sort on the display values... not best solution
+        compareValue = cellA.displayData.localeCompare(cellB.displayData);
+      }
+      else if (typeof cellDataA === "object" && typeof cellDataB === "object") {
+        // IOwsUser
+        if (cellDataA.preferredName && cellDataB.preferredName) {
+          compareValue = cellDataA.preferredName.localeCompare(cellDataB.preferredName);
+        }
+        // TODO: Other types....?
+      }
     }
-    else if (cellDataA instanceof Date && cellDataB instanceof Date) {
-      compareValue = (cellDataA > cellDataB) ? 1
-                      : (cellDataA < cellDataB) ? -1 : 0;
-    }
-    else if (cellDataA instanceof Array && cellDataB instanceof Array) {
-      // sort on the display values... not best solution
-      compareValue = cellA.displayData.localeCompare(cellB.displayData);
+    else {
+      if (!cellDataA && !cellDataB) {
+        compareValue = 0;
+      }
+      else {
+        compareValue = cellDataA ? 1 : -1;
+      }
     }
     return compareValue;
   }
 }
 
+class TableCellHeader extends React.Component<ITableCellHeader, {}> {
+  protected static tableCellHeaderSortClasses: string = css(styles.msTableHeaderCell, "ms-Link");
+
+  public render(): JSX.Element {
+    return (
+      <td className={TableCell.tableCellClasses} onClick={this.props.onClick}>
+        <a className={TableCellHeader.tableCellHeaderSortClasses} href="#">
+          {this.props.displayData}
+        </a>
+        <span className={styles.floatRight}>
+          {(() => {
+            if (this.props.isSorted) {
+              if (!this.props.sortDirDesc) {
+                return <i className="ms-Icon ms-Icon--chevronThinUp"></i>;
+              }
+              else if (this.props.sortDirDesc) {
+                return <i className="ms-Icon ms-Icon--chevronThinDown"></i>;
+              }
+            }
+          })()}
+        </span>
+      </td>
+    );
+  }
+}
+
 class TableCell extends React.Component<ITableCell<any>, {}> {
-  private static tableCellClasses: string = css(styles.msTableCellNoWrap, "ms-Table-cell");
-  private static tableCellHyperlinkClasses: string = css("ms-Link");
+  public static tableCellClasses: string = css(styles.msTableCellNoWrap, styles.autoCursor, "ms-Table-cell");
+  protected static tableCellHyperlinkClasses: string = css("ms-Link");
+
   public render(): JSX.Element {
     if (this.props.href) {
       return (
@@ -185,14 +239,6 @@ class TableCell extends React.Component<ITableCell<any>, {}> {
           <a className={TableCell.tableCellHyperlinkClasses} href={this.props.href} target="_blank">
             {this.props.displayData}
           </a>
-        </td>
-      );
-    }
-    else if (this.props.onClick) {
-      // onClick={e => _self.handleClick(cellVal)}
-      return (
-        <td className={TableCell.tableCellClasses} onClick={this.props.onClick}>
-          {this.props.displayData}
         </td>
       );
     }

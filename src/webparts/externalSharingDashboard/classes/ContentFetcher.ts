@@ -16,6 +16,7 @@ import {
 
 import {
   EnsureBracesOnGuidString,
+  GetDateFqlString,
   ParseDisplayNameFromExtUserAccountName,
   ParseOWSUSER,
   ToColloquialDateString,
@@ -76,6 +77,16 @@ export default class ContentFetcher implements ISecurableObjectStore {
     else if (self.props.mode === Mode.MyAnonSharedDocuments) {
       modeFql = `${myFql} ${anonSharedFql}`;
     }
+    else if (self.props.mode === Mode.RecentlyModifiedDocuments) {
+      const now: Date = new Date();
+      const earlier: Date = new Date(now.getFullYear(), now.getMonth(), now.getDate() - 14);
+      modeFql = `${documentsFql} Write>${GetDateFqlString(earlier)}`;
+    }
+    else if (self.props.mode === Mode.InactiveDocuments) {
+      const now: Date = new Date();
+      const earlier: Date = new Date(now.getFullYear(), now.getMonth() - 6, now.getDate());
+      modeFql = `${documentsFql} Write<${GetDateFqlString(earlier)}`;
+    }
     else {
       self.log.logError("Unsupported mode: " + self.props.mode);
       return null;
@@ -114,7 +125,10 @@ export default class ContentFetcher implements ISecurableObjectStore {
   }
 
   private queryForAllItems(uri: string, startIndex: number, rowlimit: number, response: IGetContentFuncResponse, resolve: any, reject: any): void {
-
+    // Don't fetch more items than allowed
+    if (startIndex + rowlimit > this.props.limitRowsFetched) {
+      rowlimit = this.props.limitRowsFetched - startIndex;
+    }
     const pagedUri: string = uri + "&startRow=" + startIndex + "&rowLimit=" + rowlimit;
     this.log.logInfo("Submitting request to " + pagedUri);
 
@@ -134,7 +148,7 @@ export default class ContentFetcher implements ISecurableObjectStore {
               response = currentResponse;
             }
             let getAnotherPage: boolean = false;
-            if (!currentResponse.isError) {
+            if (!currentResponse.isError && response.results.length < this.props.limitRowsFetched) {
               // Get the next page if results === rowlimit
               const rowCount: number = r.PrimaryQueryResult.RelevantResults.RowCount;
               if (rowCount === rowlimit && startIndex + rowCount < r.PrimaryQueryResult.RelevantResults.TotalRows) {

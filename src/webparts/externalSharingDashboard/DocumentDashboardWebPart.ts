@@ -6,13 +6,15 @@ import {
   BaseClientSideWebPart,
   IPropertyPaneSettings,
   IWebPartContext,
+  PropertyPaneCheckbox,
   PropertyPaneDropdown,
   PropertyPaneLabel,
   PropertyPaneLink,
+  PropertyPaneSlider,
   PropertyPaneTextField
 } from "@microsoft/sp-client-preview";
 
-import * as strings from "mystrings";
+// import * as strings from "mystrings";
 import * as React from "react";
 import * as ReactDom from "react-dom";
 
@@ -57,7 +59,8 @@ export default class DocumentDashboardWebPart extends BaseClientSideWebPart<IDoc
       mode: this.properties.mode,
       sharedWithManagedPropertyName: this.properties.sharedWithManagedPropertyName,
       crawlTimeManagedPropertyName: this.properties.crawlTimeManagedPropertyName,
-      noResultsString: this.properties.noResultsString
+      noResultsString: this.properties.noResultsString,
+      limitRowsFetched: this.properties.limitRowsFetched
     };
 
     // Create appropriate Content Fectcher class for getting content
@@ -74,7 +77,13 @@ export default class DocumentDashboardWebPart extends BaseClientSideWebPart<IDoc
       store: extContentStore,
       mode: this.properties.mode,
       scope: this.properties.scope,
-      displayType: this.properties.displayType
+      displayType: this.properties.displayType,
+      limitBarChartBars: this.properties.limitBarChartBars,
+      limitPieChartSegments: this.properties.limitPieChartSegments,
+      tableColumnsShowSharedWith: this.properties.tableColumnsShowSharedWith,
+      tableColumnsShowCrawledTime: this.properties.tableColumnsShowCrawledTime,
+      tableColumnsShowSiteTitle: this.properties.tableColumnsShowSiteTitle,
+      tableColumnsShowCreatedByModifiedBy: this.properties.tableColumnsShowCreatedByModifiedBy
     });
 
     // Build the control!
@@ -86,11 +95,12 @@ export default class DocumentDashboardWebPart extends BaseClientSideWebPart<IDoc
       pages: [
         {
           header: {
-            description: strings.PropertyPaneDescription
+            description: "Standard settings"
           },
+          displayGroupsAsAccordion: true,
           groups: [
             {
-              groupName: "Core",
+              groupName: "Content",
               groupFields: [
                 PropertyPaneDropdown("mode", {
                   label: "What type content do you want to see?",
@@ -100,9 +110,9 @@ export default class DocumentDashboardWebPart extends BaseClientSideWebPart<IDoc
                     { key: Mode.AllExtSharedDocuments, text: GetDisplayTermForEnumMode(Mode.AllExtSharedDocuments) },
                     { key: Mode.MyExtSharedDocuments, text: GetDisplayTermForEnumMode(Mode.MyExtSharedDocuments) },
                     { key: Mode.AllAnonSharedDocuments, text: GetDisplayTermForEnumMode(Mode.AllAnonSharedDocuments) },
-                    { key: Mode.MyAnonSharedDocuments, text: GetDisplayTermForEnumMode(Mode.MyAnonSharedDocuments) }
-                    // { key: Mode.AllExtSharedContainers, text: "All externally shared sites, libraries, and folders" },
-                    // { key: Mode.MyExtSharedContainers, text: "Sites, libraries, and folders which I have shared externally" }
+                    { key: Mode.MyAnonSharedDocuments, text: GetDisplayTermForEnumMode(Mode.MyAnonSharedDocuments) },
+                    { key: Mode.RecentlyModifiedDocuments, text: GetDisplayTermForEnumMode(Mode.RecentlyModifiedDocuments) },
+                    { key: Mode.InactiveDocuments, text: GetDisplayTermForEnumMode(Mode.InactiveDocuments) }
                   ]
                 }),
                 PropertyPaneDropdown("scope", {
@@ -125,15 +135,65 @@ export default class DocumentDashboardWebPart extends BaseClientSideWebPart<IDoc
               ]
             },
             {
-            groupName: "Other",
+            groupName: "Table columns",
+              groupFields: [
+                PropertyPaneCheckbox("tableColumnsShowSharedWith", {
+                  //label: "Display 'Shared with' and 'Shared by' columns?"
+                  text: "Display 'Shared with' and 'Shared by' columns?"
+                }),
+                PropertyPaneCheckbox("tableColumnsShowCrawledTime", {
+                  //label: "Display 'Last crawled' column?"
+                  text: "Display 'Last crawled' column?"
+                }),
+                PropertyPaneCheckbox("tableColumnsShowSiteTitle", {
+                  //label: "Display 'Site title' column?"
+                  text: "Display 'Site title' column?"
+                }),
+                PropertyPaneCheckbox("tableColumnsShowCreatedByModifiedBy", {
+                  //label: "Display 'Modified by' and 'Created by' columns?"
+                  text: "Display 'Modified by' and 'Created by' columns?"
+                })
+              ]
+            },
+            {
+            groupName: "Misc.",
               groupFields: [
                 PropertyPaneTextField("noResultsString", {
                   label: "What message should we display when there are no results?"
                 })
               ]
+            }
+          ]
+        },
+        {
+          header: {
+            description: "Advanced settings"
+          },
+          displayGroupsAsAccordion: true,
+          groups: [
+            {
+            groupName: "Limits",
+              groupFields: [
+                PropertyPaneSlider("limitRowsFetched", {
+                  label: "What is the maximum number of items that should be fetched?",
+                  min: 500,
+                  max: 50000,
+                  step: 500
+                }),
+                PropertyPaneSlider("limitPieChartSegments", {
+                  label: "What is the maximum number of segments to display on a pie graph?",
+                  min: 2,
+                  max: 50
+                }),
+                PropertyPaneSlider("limitBarChartBars", {
+                  label: "What is the maximum number of bars to display on a bar graph?",
+                  min: 2,
+                  max: 50
+                })
+              ]
             },
             {
-            groupName: "Search Schema",
+            groupName: "Search schema",
               groupFields: [
                 PropertyPaneTextField("sharedWithManagedPropertyName", {
                   label: "What is the name of the queryable Managed Property containing shared with details?",
@@ -151,9 +211,6 @@ export default class DocumentDashboardWebPart extends BaseClientSideWebPart<IDoc
                 PropertyPaneLink("linkproperty01", {
                   href: "https://www.bing.com",
                   text: "Search schema"
-                }),
-                PropertyPaneLabel("labelproperty02", {
-                  text: "_"
                 })
               ]
             }

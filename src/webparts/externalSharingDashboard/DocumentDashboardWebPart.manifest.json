@@ -18,7 +18,14 @@
       "displayType": 1,
       "noResultsString": "No content was found",
       "sharedWithManagedPropertyName": "SharedWithDetailsQueryable",
-      "crawlTimeManagedPropertyName": "CrawlTime"
+      "crawlTimeManagedPropertyName": "CrawlTime",
+      "limitRowsFetched": "5000",
+      "limitPieChartSegments": "10",
+      "limitBarChartBars": "10",
+      "tableColumnsShowSharedWith": false,
+      "tableColumnsShowCrawledTime": true,
+      "tableColumnsShowSiteTitle": false,
+      "tableColumnsShowCreatedByModifiedBy": true
     }
   }]
 }

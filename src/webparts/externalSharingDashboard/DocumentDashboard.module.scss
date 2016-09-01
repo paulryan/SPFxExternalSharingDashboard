@@ -17,8 +17,26 @@
 .msTableOverflow {
   max-width: 100%;
   overflow: auto;
+  padding-top: 15px;
 }
 
-.msTablePager {
+.msTablePagerWrapper {
   text-align: center;
+}
+
+.msTablePager:visited {
+  color: inherit !important;
+}
+
+.msTableHeaderCell:visited {
+  color: inherit !important;
+  text-decoration: none;
+}
+
+.autoCursor {
+  cursor: auto;
+}
+
+.floatRight {
+  float: right;
 }

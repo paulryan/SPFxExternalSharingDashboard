@@ -17,6 +17,7 @@ export interface IContentFetcherProps {
   sharedWithManagedPropertyName: string;
   crawlTimeManagedPropertyName: string;
   noResultsString: string;
+  limitRowsFetched: number;
 }
 
 export interface IGetContentFuncResponse {
@@ -30,15 +31,24 @@ export interface IDocumentDashboardProps {
   scope: SPScope;
   mode: Mode;
   displayType: DisplayType;
+  limitPieChartSegments: number;
+  limitBarChartBars: number;
+  tableColumnsShowSharedWith: boolean;
+  tableColumnsShowCrawledTime: boolean;
+  tableColumnsShowSiteTitle: boolean;
+  tableColumnsShowCreatedByModifiedBy: boolean;
 }
 
 export interface IDocumentDashboardState {
   results: ISecurableObject[];
   message: string;
   controlMode: ControlMode;
+
   scope: SPScope;
   mode: Mode;
   displayType: DisplayType;
+  // limitPieChartSegments: number;
+  // limitBarChartBars: number;
 }
 
 export interface ISecurableObject {
@@ -77,6 +87,13 @@ export interface IDocumentDashboardWebPartProps {
   noResultsString: string;
   sharedWithManagedPropertyName: string;
   crawlTimeManagedPropertyName: string;
+  limitRowsFetched: number;
+  limitPieChartSegments: number;
+  limitBarChartBars: number;
+  tableColumnsShowSharedWith: boolean;
+  tableColumnsShowCrawledTime: boolean;
+  tableColumnsShowSiteTitle: boolean;
+  tableColumnsShowCreatedByModifiedBy: boolean;
 }
 
 export interface ISearchResponse {
@@ -97,6 +114,7 @@ export interface IOwsUser {
 export interface IChart {
   items: IChartItem[];
   columnIndexToGroupUpon: number;
+  maxGroups: number;
 }
 
 export interface IChartItem {
@@ -123,6 +141,11 @@ export interface ITableCell<Type> {
   sortableData: Type;
   displayData: string;
   href: string;
-  onClick?: any;
   key: string;
+}
+
+export interface ITableCellHeader extends ITableCell<string> {
+  onClick?: any;
+  isSorted: boolean;
+  sortDirDesc: boolean;
 }
